@@ -25,7 +25,9 @@ export default function StudentsScreen() {
       email: "",
       telefone: "",
       cep: "",
-      endereco: "",
+      logradouro: "",
+      numero: "",
+      bairro: "",
       cidade: "",
       estado: "",
     },
@@ -52,9 +54,6 @@ export default function StudentsScreen() {
         email: formValues.email,
         telefone: formValues.telefone,
         cep: formValues.cep,
-        endereco: formValues.endereco,
-        cidade: formValues.cidade,
-        estado: formValues.estado,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -144,10 +143,24 @@ export default function StudentsScreen() {
           />
 
           <TextInput
-            label="Endereço"
+            label="Logradouro"
             placeholder="Rua..."
-            value={values.endereco}
-            onChangeText={(text: string) => handleChange("endereco", text)}
+            value={values.logradouro}
+            onChangeText={(text: string) => handleChange("logradouro", text)}
+
+          />
+          <TextInput
+            label="Número"
+            placeholder="123"
+            value={values.numero}
+            onChangeText={(text: string) => handleChange("numero", text)}
+          />
+
+          <TextInput
+            label="Bairro"
+            placeholder="Ex: Jardim Paulista"
+            value={values.bairro}
+            onChangeText={(text: string) => handleChange("bairro", text)}
           />
 
           <TextInput

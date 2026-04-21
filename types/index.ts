@@ -33,7 +33,9 @@ export interface Student {
   email: string;
   telefone: string;
   cep: string;
-  endereco: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
   cidade: string;
   estado: string;
   createdAt: string;
