@@ -4,37 +4,58 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user";
 
 export const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+  const { login: rawLogin, email, password, senha } = req.body as {
+    login?: string;
+    email?: string;
+    password?: string;
+    senha?: string;
+  };
 
-  try {
-    const user = await User.findOne({ where: { username } });
+  const loginValue = rawLogin ?? email ?? "";
+  const passwordValue = password ?? senha ?? "";
 
-    if (!user) {
-      return res.status(401).json({ message: "Usuário não encontrado" });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Senha incorreta" });
-    }
-
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET || "secret",
-      {
-        expiresIn: "1h",
-      },
-    );
-
-    res.json({ token });
-  } catch (error) {
-    console.error("Erro durante o login:", error);
-    res.status(500).json({ message: "Erro interno do servidor" });
+  if (!loginValue.trim() || !passwordValue.trim()) {
+    return res.status(400).json({
+      message: "Login/email e senha sao obrigatorios.",
+    });
   }
+
+  const user = await User.findOne({
+    where: {
+      email: loginValue,
+    },
+  });
+
+  const userByLogin = user ?? (await User.findOne({ where: { login: loginValue } }));
+
+  if (!userByLogin) {
+    return res.status(401).json({ message: "Usuario nao encontrado." });
+  }
+
+  const isPasswordValid = await bcrypt.compare(
+    passwordValue,
+    userByLogin.senhaHash,
+  );
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: "Senha invalida." });
+  }
+
+  const token = jwt.sign(
+    { id: userByLogin.id, perfil: userByLogin.perfil },
+    process.env.JWT_SECRET || "appscholar-secret",
+    { expiresIn: "1h" },
+  );
+
+  return res.json({
+    token,
+    usuario: {
+      nome: userByLogin.nome,
+      perfil: userByLogin.perfil,
+      email: userByLogin.email,
+    },
+  });
 };
 
-export const logout = (req: Request, res: Response) => {
-  // Para logout, basta remover o token do lado do cliente
-  res.json({ message: "Logout bem-sucedido" });
-};
+export const logout = (_req: Request, res: Response) =>
+  res.json({ message: "Logout efetuado no cliente." });

@@ -1,20 +1,27 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../database/index";
+import { sequelize } from "../database";
 
-interface UserAttributes {
+export interface UserAttributes {
   id: number;
-  username: string;
-  password: string;
+  login: string;
+  email: string;
+  senhaHash: string;
+  nome: string;
+  perfil: "aluno" | "professor" | "admin";
 }
-interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 
-class User
+type UserCreationAttributes = Optional<UserAttributes, "id">;
+
+export class User
   extends Model<UserAttributes, UserCreationAttributes>
   implements UserAttributes
 {
-  public id!: number;
-  public username!: string;
-  public password!: string;
+  declare id: number;
+  declare login: string;
+  declare email: string;
+  declare senhaHash: string;
+  declare nome: string;
+  declare perfil: "aluno" | "professor" | "admin";
 }
 
 User.init(
@@ -24,23 +31,37 @@ User.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    username: {
+    login: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    password: {
+    email: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true,
+      },
+    },
+    senhaHash: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: "senha_hash",
+    },
+    nome: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    perfil: {
+      type: DataTypes.ENUM("aluno", "professor", "admin"),
+      allowNull: false,
+      defaultValue: "admin",
     },
   },
   {
     sequelize,
-    modelName: "User",
-    tableName: "users",
+    tableName: "usuarios",
     timestamps: false,
   },
 );
-
-export { User, UserAttributes };
-

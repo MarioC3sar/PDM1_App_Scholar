@@ -1,98 +1,88 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../database/index";
+import { sequelize } from "../database";
 
-interface StudentAttributes {
+export interface StudentAttributes {
   id: number;
   nome: string;
+  matricula: string;
+  curso: string;
   email: string;
   telefone: string;
   cep: string;
-  logradouro: string;
-  numero: string;
-  bairro: string;
+  endereco: string;
   cidade: string;
   estado: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-type StudentCreationAttributes = Optional<
-  StudentAttributes,
-  "id" | "createdAt" | "updatedAt"
->;
+type StudentCreationAttributes = Optional<StudentAttributes, "id">;
 
 export class Student
   extends Model<StudentAttributes, StudentCreationAttributes>
   implements StudentAttributes
 {
-  public id!: number;
-  public nome!: string;
-  public email!: string;
-  public telefone!: string;
-  public cep!: string;
-  public logradouro!: string;
-  public numero!: string;
-  public bairro!: string;
-  public cidade!: string;
-  public estado!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: number;
+  declare nome: string;
+  declare matricula: string;
+  declare curso: string;
+  declare email: string;
+  declare telefone: string;
+  declare cep: string;
+  declare endereco: string;
+  declare cidade: string;
+  declare estado: string;
 }
 
 Student.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
     nome: {
-      type: new DataTypes.STRING(128),
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    matricula: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    curso: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     email: {
-      type: new DataTypes.STRING(128),
+      type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        isEmail: true,
+      },
     },
     telefone: {
-      type: new DataTypes.STRING(20),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     cep: {
-      type: new DataTypes.STRING(10),
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    logradouro: {
-      type: new DataTypes.STRING(255),
-      allowNull: false,
-    },
-    numero: {
-      type: new DataTypes.STRING(10),
-      allowNull: false,
-    },
-    bairro: {
-      type: new DataTypes.STRING(255),
+    endereco: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     cidade: {
-      type: new DataTypes.STRING(255),
+      type: DataTypes.STRING,
       allowNull: false,
     },
     estado: {
-      type: new DataTypes.STRING(255),
-      allowNull: false,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
+      type: DataTypes.STRING(2),
       allowNull: false,
     },
   },
   {
-    tableName: "students",
-    sequelize, // passing the `sequelize` instance is required
+    sequelize,
+    tableName: "alunos",
+    timestamps: false,
   },
 );

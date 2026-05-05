@@ -1,61 +1,72 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "../database/index";
+import { sequelize } from "../database";
+import { Course } from "./courses";
+import { Student } from "./student";
 
-interface GradeAttributes {
+export interface GradeAttributes {
   id: number;
-  studentId: number;
-  courseId: number;
-  grade: number;
-  createdAt: Date;
-  updatedAt: Date;
+  alunoId: number;
+  disciplinaId: number;
+  nota1: number;
+  nota2: number;
+  media: number;
+  situacao: "Aprovado" | "Reprovado" | "Em analise";
 }
 
-type GradeCreationAttributes = Optional<
-  GradeAttributes,
-  "id" | "createdAt" | "updatedAt"
->;
+type GradeCreationAttributes = Optional<GradeAttributes, "id" | "media" | "situacao">;
 
 export class Grade
   extends Model<GradeAttributes, GradeCreationAttributes>
   implements GradeAttributes
 {
-  public id!: number;
-  public studentId!: number;
-  public courseId!: number;
-  public grade!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare id: number;
+  declare alunoId: number;
+  declare disciplinaId: number;
+  declare nota1: number;
+  declare nota2: number;
+  declare media: number;
+  declare situacao: "Aprovado" | "Reprovado" | "Em analise";
+  declare aluno?: Student;
+  declare disciplina?: Course;
 }
 
 Grade.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    studentId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+    alunoId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: "aluno_id",
     },
-    courseId: {
-      type: DataTypes.INTEGER.UNSIGNED,
+    disciplinaId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      field: "disciplina_id",
     },
-    grade: {
+    nota1: {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
+    nota2: {
+      type: DataTypes.FLOAT,
       allowNull: false,
     },
-    updatedAt: {
-      type: DataTypes.DATE,
+    media: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    situacao: {
+      type: DataTypes.ENUM("Aprovado", "Reprovado", "Em analise"),
       allowNull: false,
     },
   },
   {
     sequelize,
+    tableName: "notas",
+    timestamps: false,
   },
 );

@@ -4,32 +4,29 @@ import { Grade } from "../models/grades";
 import { Student } from "../models/student";
 
 export const getGrades = async (req: Request, res: Response) => {
-  try {
-    const { matricula } = req.params;
-    const student = await Student.findOne({ where: { matricula } as any });
-    if (!student) {
-      return res.status(404).json({ message: "Estudante não encontrado" });
-    }
+  const { matricula } = req.params;
 
-    const grades = await Grade.findAll({
-      where: { studentId: student.id },
-      include: [{ model: Course, attributes: ["name"] }],
-    });
+  const student = await Student.findOne({ where: { matricula } });
 
-    const formattedGrades = {
-      student: student.nome,
-      course: grades.map((n: any) => ({
-        course: n.course.name,
-        grade1: n.grade1,
-        grade2: n.grade2,
-        media: n.media,
-        situation: n.situation,
-      })),
-    };
-
-    return res.json(formattedGrades);
-  } catch (error) {
-    console.error("Erro ao obter notas:", error);
-    return res.status(500).json({ message: "Erro interno do servidor" });
+  if (!student) {
+    return res.status(404).json({ message: "Aluno nao encontrado." });
   }
+
+  const studentGrades = await Grade.findAll({
+    where: { alunoId: student.id },
+    include: [{ model: Course, as: "disciplina", attributes: ["nome"] }],
+    order: [["id", "ASC"]],
+  });
+
+  return res.json({
+    aluno: student.nome,
+    matricula: student.matricula,
+    disciplinas: studentGrades.map((grade) => ({
+      disciplina: grade.disciplina?.nome ?? "Disciplina nao encontrada",
+      nota1: grade.nota1,
+      nota2: grade.nota2,
+      media: grade.media,
+      situacao: grade.situacao,
+    })),
+  });
 };

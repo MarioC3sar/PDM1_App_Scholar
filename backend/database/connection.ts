@@ -1,30 +1,50 @@
-import * as dotenv from "dotenv";
-import { Sequelize } from "sequelize";
+import bcrypt from "bcryptjs";
+import { sequelize } from ".";
+import { Course } from "../models/courses";
+import { Grade } from "../models/grades";
+import { Student } from "../models/student";
+import { Teacher } from "../models/teacher";
+import { User } from "../models/user";
 
-dotenv.config({ path: "backend/.env" });
+let initialized = false;
 
-export const sequelize = new Sequelize(
-  process.env.DB_NAME || "Nome do banco de dados",
-  process.env.DB_USER || "username",
-  process.env.DB_PASSWORD || "password",
-  {
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT || 5432),
-    dialect: "postgres",
-    logging: false,
-    define: {
-      timestamps: true,
-      underscored: true,
-    },
-  },
-);
+const setupAssociations = () => {
+  Student.hasMany(Grade, { foreignKey: "alunoId", as: "notas" });
+  Grade.belongsTo(Student, { foreignKey: "alunoId", as: "aluno" });
+
+  Teacher.hasMany(Course, { foreignKey: "professorId", as: "disciplinas" });
+  Course.belongsTo(Teacher, { foreignKey: "professorId", as: "professor" });
+
+  Course.hasMany(Grade, { foreignKey: "disciplinaId", as: "notas" });
+  Grade.belongsTo(Course, { foreignKey: "disciplinaId", as: "disciplina" });
+};
+
+const seedAdminUser = async () => {
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@appscholar.edu";
+  const adminPassword = process.env.ADMIN_PASSWORD || "123456";
+  const existingAdmin = await User.findOne({ where: { email: adminEmail } });
+
+  if (existingAdmin) {
+    return;
+  }
+
+  await User.create({
+    login: adminEmail,
+    email: adminEmail,
+    senhaHash: await bcrypt.hash(adminPassword, 10),
+    nome: "Administrador",
+    perfil: "admin",
+  });
+};
 
 export const connectToDatabase = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("Conexão com o banco de dados estabelecida com sucesso.");
-  } catch (error) {
-    console.error("Não foi possível conectar ao banco de dados:", error);
-    throw error;
+  if (!initialized) {
+    setupAssociations();
+    initialized = true;
   }
+
+  await sequelize.authenticate();
+  await sequelize.sync();
+  await seedAdminUser();
+  console.log("Conexao com PostgreSQL estabelecida e tabelas sincronizadas.");
 };

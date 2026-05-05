@@ -1,64 +1,57 @@
-import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { User } from "../models/user";
+import { Student } from "../models/student";
 
-export const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
-  try {
-    const user = await User.findOne({ where: { username } });
+const requiredFields = [
+  "nome",
+  "matricula",
+  "curso",
+  "email",
+  "telefone",
+  "cep",
+  "endereco",
+  "cidade",
+  "estado",
+];
 
-    if (!user) {
-      return res.status(401).json({ message: "Usuário não encontrado" });
-    }
+export const createStudent = async (req: Request, res: Response) => {
+  const missingFields = requiredFields.filter(
+    (field) => !String(req.body[field] ?? "").trim(),
+  );
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: "Senha incorreta" });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, username: user.username },
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: "1h",
-      },
-    );
-
-    res.json({ token });
-  } catch (error) {
-    console.error("Erro durante o login:", error);
-    res.status(500).json({ message: "Erro interno do servidor" });
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      message: "Campos obrigatorios ausentes.",
+      campos: missingFields,
+    });
   }
+
+  const existingStudent = await Student.findOne({
+    where: { matricula: req.body.matricula },
+  });
+
+  if (existingStudent) {
+    return res.status(409).json({ message: "Matricula ja cadastrada." });
+  }
+
+  const student = await Student.create({
+    nome: req.body.nome,
+    matricula: req.body.matricula,
+    curso: req.body.curso,
+    email: req.body.email,
+    telefone: req.body.telefone,
+    cep: req.body.cep,
+    endereco: req.body.endereco,
+    cidade: req.body.cidade,
+    estado: req.body.estado,
+  });
+
+  return res.status(201).json({
+    message: "Aluno cadastrado com sucesso.",
+    aluno: student,
+  });
 };
 
-export const logout = (req: Request, res: Response) => {
-  // Para logout, basta remover o token do lado do cliente
-  res.json({ message: "Logout bem-sucedido" });
+export const getStudents = async (_req: Request, res: Response) => {
+  const alunos = await Student.findAll({ order: [["id", "DESC"]] });
+  return res.json({ total: alunos.length, alunos });
 };
-
-const createStudent = (req: Request, res: Response) => {
-  res.json({ message: "Criar estudante" });
-};
-
-const getStudents = (req: Request, res: Response) => {
-  res.json({ message: "Listar estudantes" });
-};
-
-const getStudentById = (req: Request, res: Response) => {
-  res.json({ message: "Obter estudante por ID" });
-};
-
-const updateStudent = (req: Request, res: Response) => {
-  res.json({ message: "Atualizar estudante" });
-};
-
-const deleteStudent = (req: Request, res: Response) => {
-  res.json({ message: "Excluir estudante" });
-};
-
-export {
-    createStudent, deleteStudent, getStudentById, getStudents, updateStudent
-};
-
