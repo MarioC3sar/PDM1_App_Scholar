@@ -14,7 +14,9 @@ const initialValues: StudentFormData = {
   email: "",
   telefone: "",
   cep: "",
-  endereco: "",
+  logradouro: "",
+  numero: "",
+  bairro: "",
   cidade: "",
   estado: "",
 };
@@ -28,7 +30,9 @@ const validate = (values: StudentFormData) => {
     "email",
     "telefone",
     "cep",
-    "endereco",
+    "logradouro",
+    "numero",
+    "bairro",
     "cidade",
     "estado",
   ];
@@ -80,13 +84,16 @@ export default function StudentsScreen() {
   const handleCepLookup = async () => {
     const address = await searchAddressByCep(values.cep);
 
-    if (!address.endereco && !address.cidade && !address.estado) {
+    if (!address.logradouro && !address.cidade && !address.estado && !address.bairro) {
       setFeedback("CEP nao localizado. Preencha manualmente.");
       return;
     }
 
-    if (address.endereco) {
-      handleChange("endereco", address.endereco);
+    if (address.logradouro) {
+      handleChange("logradouro", address.logradouro);
+    }
+    if (address.bairro) {
+      handleChange("bairro", address.bairro);
     }
     if (address.cidade) {
       handleChange("cidade", address.cidade);
@@ -95,7 +102,7 @@ export default function StudentsScreen() {
       handleChange("estado", address.estado);
     }
 
-    setFeedback("Endereco preenchido com base no ViaCEP.");
+    setFeedback("Endereco preenchido com sucesso.");
   };
 
   return (
@@ -105,9 +112,7 @@ export default function StudentsScreen() {
       </View>
 
       <Text style={styles.title}>Cadastro de alunos</Text>
-      <Text style={styles.subtitle}>
-        Formulario com validacao, estados temporarios e preenchimento por CEP.
-      </Text>
+
 
       <Card variant="elevated">
         <ErrorMessage message={feedback} visible={!!feedback} />
@@ -169,20 +174,32 @@ export default function StudentsScreen() {
         </View>
 
         <TextInput
-          label="Endereco"
-          value={values.endereco}
-          onChangeText={(text) => handleChange("endereco", text)}
-          error={errors.endereco}
+          label="Logradouro"
+          value={values.logradouro}
+          onChangeText={(text) => handleChange("logradouro", text)}
+          error={errors.logradouro}
           required
         />
-        <TextInput
-          label={`Estado${loadingStates ? " (carregando IBGE)" : ""}`}
-          value={values.estado}
-          onChangeText={(text) => handleChange("estado", text.toUpperCase())}
-          error={errors.estado}
-          placeholder={states.slice(0, 5).join(", ")}
-          required
-        />
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              label="Numero"
+              value={values.numero}
+              onChangeText={(text) => handleChange("numero", text)}
+              error={errors.numero}
+              required
+            />
+          </View>
+          <View style={{ flex: 2 }}>
+            <TextInput
+              label="Bairro"
+              value={values.bairro}
+              onChangeText={(text) => handleChange("bairro", text)}
+              error={errors.bairro}
+              required
+            />
+          </View>
+        </View>
         <TextInput
           label={`Cidade${loadingCities ? " (carregando IBGE)" : ""}`}
           value={values.cidade}
@@ -191,7 +208,14 @@ export default function StudentsScreen() {
           placeholder={cities.slice(0, 3).join(", ")}
           required
         />
-
+        <TextInput
+            label={`Estado${loadingStates ? " (carregando IBGE)" : ""}`}
+            value={values.estado}
+            onChangeText={(text) => handleChange("estado", text.toUpperCase())}
+            error={errors.estado}
+            placeholder={states.slice(0, 5).join(", ")}
+            required
+        />
         <Button
           title={loading ? "Salvando..." : "Salvar aluno"}
           loading={loading}
@@ -208,7 +232,7 @@ export default function StudentsScreen() {
           <Text style={styles.itemText}>Curso: {student.curso}</Text>
           <Text style={styles.itemText}>Email: {student.email}</Text>
           <Text style={styles.itemText}>
-            Local: {student.cidade} - {student.estado}
+            Local: {student.logradouro}, {student.numero} - {student.bairro} - {student.cidade} - {student.estado}
           </Text>
         </Card>
       ))}
@@ -219,6 +243,7 @@ export default function StudentsScreen() {
 const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
+    marginTop:40,
   },
   title: {
     fontSize: 24,

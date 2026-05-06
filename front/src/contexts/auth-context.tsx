@@ -1,6 +1,12 @@
 import { loginWithMockApi } from "@/services/auth-service";
 import { AuthContextType, LoginCredentials, User } from "@/types";
-import React, { createContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,7 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     bootstrap().catch(() => setLoading(false));
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     setLoading(true);
 
     try {
@@ -30,11 +36,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
-  };
+  }, []);
 
   const value = useMemo<AuthContextType>(
     () => ({
@@ -44,7 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       login,
       logout,
     }),
-    [loading, user],
+    [loading, user, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

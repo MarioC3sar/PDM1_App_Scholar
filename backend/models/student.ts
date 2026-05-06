@@ -9,7 +9,9 @@ export interface StudentAttributes {
   email: string;
   telefone: string;
   cep: string;
-  endereco: string;
+  logradouro: string;
+  numero: string;
+  bairro: string;
   cidade: string;
   estado: string;
 }
@@ -27,7 +29,9 @@ export class Student
   declare email: string;
   declare telefone: string;
   declare cep: string;
-  declare endereco: string;
+  declare logradouro: string;
+  declare numero: string;
+  declare bairro: string;
   declare cidade: string;
   declare estado: string;
 }
@@ -67,7 +71,15 @@ Student.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    endereco: {
+    logradouro: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    numero: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    bairro: {
       type: DataTypes.STRING,
       allowNull: false,
     },

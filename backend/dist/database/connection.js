@@ -50,7 +50,7 @@ const connectToDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
         initialized = true;
     }
     yield _1.sequelize.authenticate();
-    yield _1.sequelize.sync();
+    yield _1.sequelize.sync({ force: true });
     yield seedAdminUser();
     console.log("Conexao com PostgreSQL estabelecida e tabelas sincronizadas.");
 });

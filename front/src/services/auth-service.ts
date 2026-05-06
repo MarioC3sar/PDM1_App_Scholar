@@ -11,7 +11,7 @@ export const loginWithMockApi = async (
 
   return {
     id: "u-1",
-    nome: "Joao Academico",
+    nome: "Mario",
     email: credentials.login,
     perfil: "admin",
   };

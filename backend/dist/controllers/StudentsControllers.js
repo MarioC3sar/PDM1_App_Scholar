@@ -18,7 +18,9 @@ const requiredFields = [
     "email",
     "telefone",
     "cep",
-    "endereco",
+    "logradouro",
+    "numero",
+    "bairro",
     "cidade",
     "estado",
 ];
@@ -43,7 +45,9 @@ const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         email: req.body.email,
         telefone: req.body.telefone,
         cep: req.body.cep,
-        endereco: req.body.endereco,
+        logradouro: req.body.logradouro,
+        numero: req.body.numero,
+        bairro: req.body.bairro,
         cidade: req.body.cidade,
         estado: req.body.estado,
     });

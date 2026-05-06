@@ -10,7 +10,13 @@ import {
   Teacher,
   TeacherFormData,
 } from "@/types";
-import React, { createContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 const initialTeachers: Teacher[] = [
   {
@@ -51,7 +57,9 @@ const initialStudents: Student[] = [
     email: "maria@appscholar.edu",
     telefone: "(11) 99999-1111",
     cep: "12245000",
-    endereco: "Rua das Flores, 120",
+    logradouro: "Rua das Flores",
+    numero: "120",
+    bairro: "Centro",
     cidade: "Sao Jose dos Campos",
     estado: "SP",
   },
@@ -105,33 +113,36 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
     setGrades(initialGrades);
   }, []);
 
-  const addStudent = async (student: StudentFormData) => {
+  const addStudent = useCallback(async (student: StudentFormData) => {
     const newStudent: Student = { id: `s-${Date.now()}`, ...student };
     setStudents((prev) => [newStudent, ...prev]);
-  };
+  }, []);
 
-  const addTeacher = async (teacher: TeacherFormData) => {
+  const addTeacher = useCallback(async (teacher: TeacherFormData) => {
     const newTeacher: Teacher = { id: `t-${Date.now()}`, ...teacher };
     setTeachers((prev) => [newTeacher, ...prev]);
-  };
+  }, []);
 
-  const addCourse = async (course: CourseFormData) => {
+  const addCourse = useCallback(async (course: CourseFormData) => {
     const newCourse: Course = { id: `c-${Date.now()}`, ...course };
     setCourses((prev) => [newCourse, ...prev]);
-  };
+  }, []);
 
-  const searchAddressByCep = async (cep: string) => getAddressByCep(cep);
+  const searchAddressByCep = useCallback(
+    async (cep: string) => getAddressByCep(cep),
+    [],
+  );
 
-  const hydrateStates = async () => {
+  const hydrateStates = useCallback(async () => {
     setLoadingStates(true);
     try {
       setStates(await loadStates());
     } finally {
       setLoadingStates(false);
     }
-  };
+  }, []);
 
-  const hydrateCities = async (uf: string) => {
+  const hydrateCities = useCallback(async (uf: string) => {
     if (!uf) {
       setCities([]);
       return;
@@ -143,7 +154,7 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
     } finally {
       setLoadingCities(false);
     }
-  };
+  }, []);
 
   const value = useMemo<AcademicContextType>(
     () => ({
@@ -162,7 +173,22 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       loadStates: hydrateStates,
       loadCitiesByState: hydrateCities,
     }),
-    [cities, courses, grades, loadingCities, loadingStates, states, students, teachers],
+    [
+      students,
+      teachers,
+      courses,
+      grades,
+      states,
+      cities,
+      loadingStates,
+      loadingCities,
+      addStudent,
+      addTeacher,
+      addCourse,
+      searchAddressByCep,
+      hydrateStates,
+      hydrateCities,
+    ],
   );
 
   return (

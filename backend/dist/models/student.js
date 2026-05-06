@@ -40,7 +40,15 @@ Student.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
-    endereco: {
+    logradouro: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
+    numero: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
+    bairro: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },

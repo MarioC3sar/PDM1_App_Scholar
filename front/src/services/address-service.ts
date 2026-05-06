@@ -2,6 +2,7 @@ import { StudentFormData } from "@/types";
 
 interface ViaCepResponse {
   logradouro?: string;
+  bairro?: string;
   localidade?: string;
   uf?: string;
   erro?: boolean;
@@ -26,7 +27,8 @@ export const getAddressByCep = async (
 
     return {
       cep: sanitizedCep,
-      endereco: data.logradouro ?? "",
+      logradouro: data.logradouro ?? "",
+      bairro: data.bairro ?? "",
       cidade: data.localidade ?? "",
       estado: data.uf ?? "",
     };

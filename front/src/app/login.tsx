@@ -5,7 +5,14 @@ import { useForm } from "@/hooks/use-form";
 import { LoginCredentials } from "@/types";
 import { Redirect } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 const initialValues: LoginCredentials = {
   login: "",
@@ -40,50 +47,57 @@ export default function LoginScreen() {
   }
 
   return (
-    <ScreenContainer scrollable={false} contentContainerStyle={styles.content}>
-      <View style={styles.brandBlock}>
-        <Text style={styles.brandEyebrow}>Sistema academico mobile</Text>
-        <Text style={styles.brandTitle}>AppScholar</Text>
-        <Text style={styles.brandText}>
-          Projeto multiplataforma com autenticacao, cadastros academicos e consulta de boletim.
-        </Text>
-      </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
 
-      <Card variant="elevated" style={styles.formCard}>
-        <Text style={styles.formTitle}>Entrar</Text>
-        <Text style={styles.formSubtitle}>
-          Use qualquer email/login e senha para o fluxo mockado desta etapa.
-        </Text>
-
-        <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
-
-        <TextInput
-          label="Login ou email"
-          placeholder="usuario@appscholar.edu"
-          autoCapitalize="none"
-          value={values.login}
-          onChangeText={(text) => handleChange("login", text)}
-          error={errors.login}
-          required
+    >
+      <ScreenContainer contentContainerStyle={styles.content}>
+        <Image
+          source={require("@/assets/images/appscholar.png")}
+          style={styles.logo}
+          resizeMode="contain"
         />
+        <View style={styles.brandBlock}>
+          <Text style={styles.brandEyebrow}>Sistema academico mobile</Text>
+          <Text style={styles.brandText}>
+            Projeto multiplataforma com autenticacao, cadastros academicos e consulta de boletim.
+          </Text>
+        </View>
 
-        <TextInput
-          label="Senha"
-          placeholder="Digite sua senha"
-          secureTextEntry
-          value={values.password}
-          onChangeText={(text) => handleChange("password", text)}
-          error={errors.password}
-          required
-        />
+        <Card variant="elevated" style={styles.formCard}>
+          <Text style={styles.formTitle}>Entrar</Text>
 
-        <Button
-          title={loading ? "Entrando..." : "Acessar painel"}
-          loading={loading}
-          onPress={handleSubmit}
-        />
-      </Card>
-    </ScreenContainer>
+          <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
+
+          <TextInput
+            label="Login ou email"
+            placeholder="usuario@appscholar.edu"
+            autoCapitalize="none"
+            value={values.login}
+            onChangeText={(text) => handleChange("login", text)}
+            error={errors.login}
+            required
+          />
+
+          <TextInput
+            label="Senha"
+            placeholder="Digite sua senha"
+            secureTextEntry
+            value={values.password}
+            onChangeText={(text) => handleChange("password", text)}
+            error={errors.password}
+            required
+          />
+
+          <Button
+            title={loading ? "Entrando..." : "Acessar painel"}
+            loading={loading}
+            onPress={handleSubmit}
+          />
+        </Card>
+      </ScreenContainer>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -97,6 +111,12 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
     borderRadius: 24,
     padding: 24,
+    alignItems: "center",
+  },
+  logo: {
+    width: 400,
+    height: 200,
+    alignSelf: "center",
   },
   brandEyebrow: {
     color: "#cfe0f2",
@@ -105,16 +125,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 10,
   },
-  brandTitle: {
-    color: "#ffffff",
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
   brandText: {
     color: "#edf3fa",
     lineHeight: 22,
     fontSize: 15,
+    textAlign: "center",
   },
   formCard: {
     borderColor: palette.border,
@@ -125,10 +140,5 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 6,
-  },
-  formSubtitle: {
-    color: palette.textMuted,
-    lineHeight: 20,
-    marginBottom: 16,
   },
 });
