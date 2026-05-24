@@ -225,17 +225,11 @@ export default function StudentsScreen() {
 
       <Text style={styles.sectionTitle}>Alunos cadastrados</Text>
 
-      {students.map((student) => (
-        <Card key={student.id}>
-          <Text style={styles.itemTitle}>{student.nome}</Text>
-          <Text style={styles.itemText}>Matricula: {student.matricula}</Text>
-          <Text style={styles.itemText}>Curso: {student.curso}</Text>
-          <Text style={styles.itemText}>Email: {student.email}</Text>
-          <Text style={styles.itemText}>
-            Local: {student.logradouro}, {student.numero} - {student.bairro} - {student.cidade} - {student.estado}
-          </Text>
-        </Card>
-      ))}
+      <Button
+          title={"Ver Lista"}
+          loading={loading}
+          onPress={() => router.push("/studentsList")}
+      />
     </ScreenContainer>
   );
 }

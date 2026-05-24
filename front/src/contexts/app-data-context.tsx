@@ -128,6 +128,25 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
     setCourses((prev) => [newCourse, ...prev]);
   }, []);
 
+  const updateGrade = useCallback(
+    async (gradeId: string, updates: Pick<GradeEntry, "nota1" | "nota2">) => {
+      setGrades((prev) =>
+        prev.map((grade) => {
+          if (grade.id !== gradeId) return grade;
+
+          const nota1 = updates.nota1;
+          const nota2 = updates.nota2;
+          const media = (nota1 + nota2) / 2;
+          const situacao =
+            media >= 6 ? "Aprovado" : media < 4 ? "Reprovado" : "Em analise";
+
+          return { ...grade, nota1, nota2, media, situacao };
+        }),
+      );
+    },
+    [],
+  );
+
   const searchAddressByCep = useCallback(
     async (cep: string) => getAddressByCep(cep),
     [],
@@ -169,6 +188,7 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       addStudent,
       addTeacher,
       addCourse,
+      updateGrade,
       searchAddressByCep,
       loadStates: hydrateStates,
       loadCitiesByState: hydrateCities,
@@ -185,6 +205,7 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       addStudent,
       addTeacher,
       addCourse,
+      updateGrade,
       searchAddressByCep,
       hydrateStates,
       hydrateCities,

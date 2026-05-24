@@ -8,6 +8,7 @@ export interface User {
   nome: string;
   email: string;
   perfil: "aluno" | "professor" | "admin";
+  matricula?: string;
 }
 
 export interface AuthContextType {
@@ -104,6 +105,7 @@ export interface AcademicContextType {
   addStudent: (student: StudentFormData) => Promise<void>;
   addTeacher: (teacher: TeacherFormData) => Promise<void>;
   addCourse: (course: CourseFormData) => Promise<void>;
+  updateGrade: (gradeId: string, updates: Pick<GradeEntry, "nota1" | "nota2">) => Promise<void>;
   searchAddressByCep: (cep: string) => Promise<Partial<StudentFormData>>;
   loadStates: () => Promise<void>;
   loadCitiesByState: (uf: string) => Promise<void>;

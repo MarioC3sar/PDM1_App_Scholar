@@ -13,6 +13,12 @@ export const loginWithMockApi = async (
     id: "u-1",
     nome: "Mario",
     email: credentials.login,
-    perfil: "admin",
+    perfil: credentials.login === "aluno@pdm.com"
+      ? "aluno"
+      : credentials.login === "professor@pdm.com"
+        ? "professor"
+        : "admin",
+    // Para o aluno, simulamos o vinculo com uma matricula para permitir restringir a consulta.
+    matricula: credentials.login === "aluno@pdm.com" ? "2024001" : undefined,
   };
 };

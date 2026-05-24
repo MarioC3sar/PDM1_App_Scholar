@@ -11,7 +11,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 
 function RootNavigator() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -19,6 +19,9 @@ function RootNavigator() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === "login";
+    const currentRoute = segments[0] ?? "";
+
+    const adminOnlyRoutes = new Set(["students", "studentsList", "teachers", "courses"]);
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redireciona para o login caso nao esteja autenticado e tente acessar outra rota
@@ -26,8 +29,14 @@ function RootNavigator() {
     } else if (isAuthenticated && inAuthGroup) {
       // Redireciona para o dashboard caso ja esteja autenticado e tente acessar o login
       router.replace("/(tabs)/dashboard");
+    } else if (
+      isAuthenticated &&
+      adminOnlyRoutes.has(currentRoute) &&
+      user?.perfil !== "admin"
+    ) {
+      router.replace("/(tabs)/dashboard");
     }
-  }, [isAuthenticated, loading, segments, router]);
+  }, [isAuthenticated, loading, segments, router, user?.perfil]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

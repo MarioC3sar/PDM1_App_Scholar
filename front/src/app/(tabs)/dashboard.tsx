@@ -1,39 +1,52 @@
 import { Card, ScreenContainer } from "@/components/ui";
 import { palette } from "@/constants/theme";
-import { useAcademicData } from "@/hooks/use-academic-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-const shortcuts = [
+type Role = "aluno" | "professor" | "admin";
+
+const shortcuts: Array<{
+  title: string;
+  description: string;
+  route: string;
+  roles: Role[];
+}> = [
   {
     title: "Cadastro de alunos",
     description: "Registre dados pessoais e logradouro do estudante.",
     route: "/students",
+    roles: ["admin"],
   },
   {
     title: "Cadastro de professores",
     description: "Mantenha titulacao, area e tempo de docencia.",
     route: "/teachers",
+    roles: ["admin"],
   },
   {
     title: "Cadastro de disciplinas",
     description: "Defina professor responsavel, curso e semestre.",
     route: "/courses",
+    roles: ["admin"],
   },
   {
     title: "Consulta de boletim",
     description: "Acompanhe notas, medias e situacao do aluno.",
     route: "/grades",
+    roles: ["admin", "professor", "aluno"],
   },
 ];
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { students, teachers, courses, grades } = useAcademicData();
+
+  const visibleShortcuts = shortcuts.filter((shortcut) =>
+    user ? shortcut.roles.includes(user.perfil) : false,
+  );
 
   return (
     <ScreenContainer>
@@ -49,7 +62,7 @@ export default function DashboardScreen() {
 
       <Text style={styles.sectionTitle}>Acessos rapidos</Text>
 
-      {shortcuts.map((shortcut) => (
+      {visibleShortcuts.map((shortcut) => (
         <Card
           key={shortcut.route}
           variant="elevated"

@@ -1,22 +1,36 @@
 import { Button, Card, ScreenContainer, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
+import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function GradesScreen() {
   const router = useRouter();
-  const { grades } = useAcademicData();
+  const { user } = useAuth();
+  const { grades, updateGrade } = useAcademicData();
   const [matricula, setMatricula] = useState("");
   const [filteredMatricula, setFilteredMatricula] = useState("");
+  const [editingGradeId, setEditingGradeId] = useState<string | null>(null);
+  const [nota1Draft, setNota1Draft] = useState("");
+  const [nota2Draft, setNota2Draft] = useState("");
+
+  const canEditGrades = user?.perfil === "professor" || user?.perfil === "admin";
+  const isStudentView = user?.perfil === "aluno";
 
   useEffect(() => {
+    if (isStudentView && user?.matricula) {
+      setMatricula(user.matricula);
+      setFilteredMatricula(user.matricula);
+      return;
+    }
+
     if (!matricula && grades[0]) {
       setMatricula(grades[0].matricula);
       setFilteredMatricula(grades[0].matricula);
     }
-  }, [grades, matricula]);
+  }, [grades, isStudentView, matricula, user?.matricula]);
 
   const filteredGrades = useMemo(
     () =>
@@ -52,8 +66,13 @@ export default function GradesScreen() {
           value={matricula}
           onChangeText={setMatricula}
           placeholder="Ex: 2024001"
+          editable={!isStudentView}
         />
-        <Button title="Consultar boletim" onPress={() => setFilteredMatricula(matricula)} />
+        <Button
+          title="Consultar boletim"
+          onPress={() => setFilteredMatricula(matricula)}
+          disabled={isStudentView}
+        />
       </Card>
 
       {filteredGrades.map((grade) => (
@@ -75,6 +94,61 @@ export default function GradesScreen() {
           >
             {grade.situacao}
           </Text>
+
+          {canEditGrades ? (
+            <View style={styles.editSection}>
+              {editingGradeId === grade.id ? (
+                <>
+                  <TextInput
+                    label="Nota 1"
+                    value={nota1Draft}
+                    onChangeText={setNota1Draft}
+                    keyboardType="numeric"
+                    placeholder={String(grade.nota1)}
+                  />
+                  <TextInput
+                    label="Nota 2"
+                    value={nota2Draft}
+                    onChangeText={setNota2Draft}
+                    keyboardType="numeric"
+                    placeholder={String(grade.nota2)}
+                  />
+                  <View style={styles.editActions}>
+                    <Button
+                      title="Salvar"
+                      onPress={async () => {
+                        const nextNota1 = Number(nota1Draft);
+                        const nextNota2 = Number(nota2Draft);
+                        await updateGrade(grade.id, { nota1: nextNota1, nota2: nextNota2 });
+                        setEditingGradeId(null);
+                        setNota1Draft("");
+                        setNota2Draft("");
+                      }}
+                    />
+                    <Button
+                      title="Cancelar"
+                      variant="secondary"
+                      onPress={() => {
+                        setEditingGradeId(null);
+                        setNota1Draft("");
+                        setNota2Draft("");
+                      }}
+                    />
+                  </View>
+                </>
+              ) : (
+                <Button
+                  title="Alterar notas"
+                  variant="secondary"
+                  onPress={() => {
+                    setEditingGradeId(grade.id);
+                    setNota1Draft(String(grade.nota1));
+                    setNota2Draft(String(grade.nota2));
+                  }}
+                />
+              )}
+            </View>
+          ) : null}
         </Card>
       ))}
 
@@ -138,5 +212,13 @@ const styles = StyleSheet.create({
     color: palette.text,
     fontWeight: "700",
     marginBottom: 8,
+  },
+  editSection: {
+    marginTop: 12,
+    gap: 10,
+  },
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
   },
 });
