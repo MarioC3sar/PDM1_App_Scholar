@@ -21,7 +21,7 @@ function RootNavigator() {
     const inAuthGroup = segments[0] === "login";
     const currentRoute = segments[0] ?? "";
 
-    const adminOnlyRoutes = new Set(["students", "studentsList", "teachers", "courses"]);
+    const adminOnlyRoutes = new Set(["students", "studentsList", "teachers", "teachersList", "courses"]);
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redireciona para o login caso nao esteja autenticado e tente acessar outra rota
@@ -43,7 +43,9 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
+        <Stack.Screen name="studentsList" />
         <Stack.Screen name="students" />
+        <Stack.Screen name="teachersList" />
         <Stack.Screen name="teachers" />
         <Stack.Screen name="courses" />
         <Stack.Screen name="grades" />

@@ -1,4 +1,4 @@
-import { loginWithMockApi } from "@/services/auth-service";
+import { loginWithApi } from "@/services/auth-service";
 import { AuthContextType, LoginCredentials, User } from "@/types";
 import React, {
   createContext,
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
 
     try {
-      const loggedUser = await loginWithMockApi(credentials);
+      const loggedUser = await loginWithApi(credentials);
       setUser(loggedUser);
     } finally {
       setLoading(false);
