@@ -4,7 +4,7 @@ import axios from 'axios';
 
 
 
-const IP_DA_MAQUINA = process.env.IP || "10.68.55.62";
+const IP_DA_MAQUINA = process.env.IP || "192.168.15.13";
 
 const api = axios.create({
     // Já deixamos o /api no final para você não precisar repetir nas telas

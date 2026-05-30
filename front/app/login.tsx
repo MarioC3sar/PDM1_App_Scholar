@@ -67,7 +67,7 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <Text style={styles.heroTitle}>APP Scholar</Text>
+
               <Text style={styles.heroSubtitle}>Sistema de Gestão Acadêmica</Text>
             </View>
 
@@ -164,12 +164,13 @@ const styles = StyleSheet.create({
     left: -30,
   },
   logoWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 44,
+    width: 180,
+    height: 180,
+    borderRadius: 100,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
     marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -178,8 +179,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   logo: {
-    width: 66,
-    height: 56,
+    width: 340,
+    height: 196,
   },
   heroTitle: {
     color: "#fff",
