@@ -1,0 +1,23 @@
+
+### 1. Testar se o servidor esta online
+GET http://localhost:3000/
+
+### 2. Testar o erro de validacao do Zod (Tentando criar aluno sem token)
+POST http://localhost:3000/api/alunos
+Content-Type: application/json
+
+{
+  "nome": "Mario",
+  "matricula": "123",
+  "cursoId": "texto_invalido",
+  "email": "email_errado"
+}
+
+### 3. Criar usuario administrador
+POST http://localhost:3000/api/admins
+Content-Type: application/json
+
+{
+  "email": "admin@appscholar.com",
+  "senha": "admin123"
+}

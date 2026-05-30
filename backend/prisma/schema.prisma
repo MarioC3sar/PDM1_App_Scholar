@@ -1,0 +1,137 @@
+datasource db {
+  provider = "postgresql"
+
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- ENUMS (Perfis e Situações) ---
+enum Perfil {
+  ADMIN
+  PROFESSOR
+  ALUNO
+}
+
+enum SituacaoNota {
+  CURSANDO
+  APROVADO
+  REPROVADO
+}
+
+// --- MODELOS DE AUTENTICAÇÃO E ACESSO ---
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  perfil    Perfil
+  primeiroAcesso Boolean @default(true) @map("primeiro_acesso")
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  // Relações 1 para 1 com os perfis específicos
+  aluno     Aluno?
+  professor Professor?
+
+  @@map("usuarios")
+}
+
+// --- MODELOS ACADÉMICOS ---
+
+model Curso {
+  id        Int     @id @default(autoincrement())
+  nome      String  @unique // Ex: "Engenharia de Software"
+  descricao String?
+
+  // Relações
+  alunos      Aluno[]
+  disciplinas Disciplina[]
+
+  @@map("cursos")
+}
+
+model Aluno {
+  id         Int     @id @default(autoincrement())
+  nome       String
+  matricula  String  @unique
+  telefone   String?
+  cep        String?
+  logradouro String?
+  numero     String?
+  bairro     String?
+  cidade     String?
+  estado     String? @db.VarChar(2)
+
+  // Vínculo obrigatório com Usuário (Login)
+  usuarioId Int     @unique @map("usuario_id")
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  // Vínculo obrigatório com o Curso
+  cursoId Int   @map("curso_id")
+  curso   Curso @relation(fields: [cursoId], references: [id])
+
+  // Vínculo com as Notas/Boletim
+  notas Nota[]
+
+  @@map("alunos")
+}
+
+model Professor {
+  id            Int     @id @default(autoincrement())
+  nome          String
+  titulacao     String
+  area          String
+  tempoDocencia String? @map("tempo_docencia")
+
+  // Vínculo obrigatório com Usuário (Login)
+  usuarioId Int     @unique @map("usuario_id")
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  // Disciplinas que este professor leciona
+  disciplinas Disciplina[]
+
+  @@map("professores")
+}
+
+// ESTE É O TEU MODELO "COURSE" ADAPTADO E MELHORADO:
+model Disciplina {
+  id           Int    @id @default(autoincrement())
+  nome         String // O nome da disciplina (ex: "Cálculo I")
+  cargaHoraria Int    @map("carga_horaria")
+  semestre     String
+
+  // Em vez de salvar o curso como string, conectamos diretamente ao modelo Curso
+  cursoId Int   @map("curso_id")
+  curso   Curso @relation(fields: [cursoId], references: [id])
+
+  // Chave estrangeira que tinhas no Sequelize para o Professor
+  professorId Int       @map("professor_id")
+  professor   Professor @relation(fields: [professorId], references: [id])
+
+  // Relação com as Notas dos Alunos
+  notas Nota[]
+
+  @@map("disciplinas") // Mantém o nome da tua tabela original
+}
+
+model Nota {
+  id       Int          @id @default(autoincrement())
+  nota1    Float?
+  nota2    Float?
+  media    Float?
+  faltas   Int          @default(0) // Controlado pelo Professor
+  situacao SituacaoNota @default(CURSANDO)
+
+  // O aluno a quem pertence a nota
+  alunoId Int   @map("aluno_id")
+  aluno   Aluno @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  // A disciplina referente a esta nota
+  disciplinaId Int        @map("disciplina_id")
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
+
+  // Garante que o aluno só tenha UM registo de nota por disciplina
+  @@unique([alunoId, disciplinaId])
+  @@map("notas")
+}

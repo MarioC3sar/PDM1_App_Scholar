@@ -1,5 +1,6 @@
 import { loginWithApi } from "@/services/auth-service";
 import { AuthContextType, LoginCredentials, User } from "@/types";
+import * as SecureStore from "expo-secure-store";
 import React, {
   createContext,
   useCallback,
@@ -38,8 +39,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const completeFirstAccess = useCallback(() => {
+    setUser((currentUser) =>
+      currentUser ? { ...currentUser, firstAccess: false } : currentUser,
+    );
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
+    void SecureStore.deleteItemAsync("userToken");
   }, []);
 
   const value = useMemo<AuthContextType>(
@@ -48,9 +56,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       loading,
       isAuthenticated: !!user,
       login,
+      completeFirstAccess,
       logout,
     }),
-    [loading, user, login, logout],
+    [loading, user, login, completeFirstAccess, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

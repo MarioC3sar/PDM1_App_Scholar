@@ -1,5 +1,7 @@
 import { loadCities, loadStates } from "@/services/location-service";
 import { getAddressByCep } from "@/services/address-service";
+import { getCoursesFromApi } from "@/services/course-service";
+import { createStudentOnApi } from "@/services/student-service";
 import {
   AcademicContextType,
   Course,
@@ -100,11 +102,15 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<
+    { id: number; nome: string; descricao?: string | null }[]
+  >([]);
   const [grades, setGrades] = useState<GradeEntry[]>([]);
   const [states, setStates] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   useEffect(() => {
     setStudents(initialStudents);
@@ -114,8 +120,9 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
   }, []);
 
   const addStudent = useCallback(async (student: StudentFormData) => {
-    const newStudent: Student = { id: `s-${Date.now()}`, ...student };
-    setStudents((prev) => [newStudent, ...prev]);
+    const result = await createStudentOnApi(student);
+    setStudents((prev) => [result.student, ...prev]);
+    return result;
   }, []);
 
   const addTeacher = useCallback(async (teacher: TeacherFormData) => {
@@ -175,16 +182,27 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const hydrateCourses = useCallback(async () => {
+    setLoadingCourses(true);
+    try {
+      setAvailableCourses(await getCoursesFromApi());
+    } finally {
+      setLoadingCourses(false);
+    }
+  }, []);
+
   const value = useMemo<AcademicContextType>(
     () => ({
       students,
       teachers,
       courses,
+      availableCourses,
       grades,
       states,
       cities,
       loadingStates,
       loadingCities,
+      loadingCourses,
       addStudent,
       addTeacher,
       addCourse,
@@ -192,16 +210,19 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       searchAddressByCep,
       loadStates: hydrateStates,
       loadCitiesByState: hydrateCities,
+      loadCourses: hydrateCourses,
     }),
     [
       students,
       teachers,
       courses,
+      availableCourses,
       grades,
       states,
       cities,
       loadingStates,
       loadingCities,
+      loadingCourses,
       addStudent,
       addTeacher,
       addCourse,
@@ -209,6 +230,7 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       searchAddressByCep,
       hydrateStates,
       hydrateCities,
+      hydrateCourses,
     ],
   );
 

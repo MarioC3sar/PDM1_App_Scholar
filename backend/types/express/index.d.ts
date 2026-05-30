@@ -5,11 +5,11 @@ declare global {
     interface Request {
       user?: {
         id: number;
-        perfil: "aluno" | "professor" | "admin";
-        email: string;
-        nome: string;
+        // Ajustado para maiúsculo batendo com o Prisma
+        perfil: "ALUNO" | "PROFESSOR" | "ADMIN";
+        email?: string;
+        nome?: string;
       };
     }
   }
 }
-

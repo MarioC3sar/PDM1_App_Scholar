@@ -1,48 +1,74 @@
-import { Card, ScreenContainer } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAuth } from "@/hooks/use-auth";
+import { useAcademicData } from "@/hooks/use-academic-data";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 type Role = "aluno" | "professor" | "admin";
 
-const shortcuts: Array<{
+const modules: {
   title: string;
   description: string;
   route: string;
-  icon: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
   roles: Role[];
-}> = [
+}[] = [
   {
-    title: "Alunos",
-    description: "Consulte dados dos estudantes.",
+    title: "Cadastro de Alunos",
+    description: "Gerenciar alunos matriculados",
     route: "/studentsList",
-    icon: "🎓",
+    icon: "school",
     roles: ["admin"],
   },
   {
-    title: "Professores",
-    description: "Mantenha titulacao, area e tempo de docencia.",
+    title: "Cadastro de Professores",
+    description: "Gerenciar corpo docente",
     route: "/teachersList",
-    icon: "👨‍🏫",
+    icon: "person",
     roles: ["admin"],
   },
   {
-    title: "Disciplinas",
-    description: "Defina professor responsavel, curso e semestre.",
+    title: "Cadastro de Disciplinas",
+    description: "Gerenciar grade curricular",
     route: "/courses",
-    icon: "📚",
+    icon: "menu-book",
     roles: ["admin"],
   },
   {
-    title: "Boletim",
-    description: "Acompanhe notas, medias e situacao do aluno.",
+    title: "Consulta de Boletim",
+    description: "Visualizar notas e situação",
     route: "/grades",
-    icon: "📊",
-    roles: ["admin", "professor", "aluno"],
+    icon: "assessment",
+    roles: ["admin", "aluno"],
   },
+  {
+    title: "Editar Notas",
+    description: "Consulte disciplinas e altere notas",
+    route: "/gradeEditor",
+    icon: "edit",
+    roles: ["professor"],
+  },
+];
+
+const quickAccess: {
+  label: string;
+  route: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  roles: Role[];
+}[] = [
+  { label: "Ver todos os alunos",   route: "/studentsList", icon: "school",     roles: ["admin"] },
+  { label: "Consultar boletins",    route: "/grades",       icon: "assessment", roles: ["admin", "aluno"] },
+  { label: "Adicionar disciplina",  route: "/courses",      icon: "menu-book",  roles: ["admin"] },
+  { label: "Editar notas",          route: "/gradeEditor",  icon: "edit",       roles: ["professor"] },
 ];
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -54,13 +80,24 @@ const ROLE_LABEL: Record<Role, string> = {
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
-
-  const visibleShortcuts = shortcuts.filter((s) =>
-      user ? s.roles.includes(user.perfil) : false,
-  );
+  const { students, teachers } = useAcademicData();
 
   const role: Role = user?.perfil ?? "aluno";
   const initial = String(user?.nome ?? "?")[0].toUpperCase();
+
+  const visibleModules = modules.filter((m) =>
+      user ? m.roles.includes(user.perfil) : false,
+  );
+  const visibleQuick = quickAccess.filter((q) =>
+      user ? q.roles.includes(user.perfil) : false,
+  );
+
+  const stats = [
+    { label: "Alunos",      value: students.length, icon: "school"      as keyof typeof MaterialIcons.glyphMap },
+    { label: "Professores", value: teachers.length, icon: "person"      as keyof typeof MaterialIcons.glyphMap },
+    { label: "Disciplinas", value: 0,               icon: "menu-book"   as keyof typeof MaterialIcons.glyphMap },
+    { label: "Aprovação",   value: "85%",           icon: "trending-up" as keyof typeof MaterialIcons.glyphMap },
+  ];
 
   return (
       <ScrollView
@@ -68,61 +105,102 @@ export default function DashboardScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerEyebrow}>BEM-VINDO</Text>
-            <Text style={styles.headerTitle}>Dashboard</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.82}>
-            <Text style={styles.logoutText}>Sair</Text>
-          </TouchableOpacity>
-        </View>
+        {/* ── Hero header ── */}
+        <View style={styles.hero}>
+          <View style={styles.glowOne} />
+          <View style={styles.glowTwo} />
 
-        {/* ── User card ── */}
-        <View style={styles.userCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial}</Text>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user?.nome}</Text>
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{ROLE_LABEL[role]}</Text>
+          {/* Top row */}
+          <View style={styles.heroTopRow}>
+            <View style={styles.brandBlock}>
+              <View style={styles.brandDot}>
+                <MaterialIcons name="school" size={16} color="#fff" />
+              </View>
+              <Text style={styles.brandText}>FATEC Acadêmico</Text>
             </View>
+            <TouchableOpacity style={styles.notifBtn} activeOpacity={0.8}>
+              <MaterialIcons name="notifications" size={18} color="#fff" />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
           </View>
-          <MaterialIcons name="account-circle" size={36} color={palette.primary + "40"} />
+
+          {/* Welcome */}
+          <View style={styles.welcomeRow}>
+            <View>
+              <Text style={styles.welcomeLabel}>Bem-vindo,</Text>
+              <Text style={styles.heroUserName}>{user?.nome}</Text>
+            </View>
+            <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.82}>
+              <Text style={styles.logoutText}>Sair</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* ── Section title ── */}
-        <Text style={styles.sectionEyebrow}>MENU</Text>
-        <Text style={styles.sectionTitle}>Acessos rápidos</Text>
-
-        {/* ── Shortcut cards ── */}
-        <View style={styles.cardList}>
-          {visibleShortcuts.map((shortcut) => (
-              <Pressable
-                  key={shortcut.route}
-                  style={({ pressed }) => [styles.shortcutCard, pressed && styles.shortcutCardPressed]}
-                  onPress={() => router.push(shortcut.route as never)}
-              >
-                <View style={styles.shortcutIconBox}>
-                  <Text style={styles.shortcutIcon}>{shortcut.icon}</Text>
+        {/* ── Stats card (overlapping hero) ── */}
+        <View style={styles.statsCard}>
+          {stats.map((s) => (
+              <View key={s.label} style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <MaterialIcons name={s.icon} size={18} color={palette.primary} />
                 </View>
-                <View style={styles.shortcutInfo}>
-                  <Text style={styles.shortcutTitle}>{shortcut.title}</Text>
-                  <Text style={styles.shortcutDescription}>{shortcut.description}</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={22} color={palette.primary + "60"} />
-              </Pressable>
+                <Text style={styles.statValue}>{s.value}</Text>
+                <Text style={styles.statLabel}>{s.label}</Text>
+              </View>
           ))}
         </View>
+
+        {/* ── Modules grid ── */}
+        {visibleModules.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Módulos</Text>
+              <View style={styles.moduleGrid}>
+                {visibleModules.map((mod) => (
+                    <Pressable
+                        key={mod.route}
+                        style={({ pressed }) => [styles.moduleCard, pressed && styles.moduleCardPressed]}
+                        onPress={() => router.push(mod.route as never)}
+                    >
+                      <View style={styles.moduleIconBox}>
+                        <MaterialIcons name={mod.icon} size={22} color={palette.primary} />
+                      </View>
+                      <Text style={styles.moduleTitle}>{mod.title}</Text>
+                      <Text style={styles.moduleDescription}>{mod.description}</Text>
+                    </Pressable>
+                ))}
+              </View>
+            </>
+        )}
+
+        {/* ── Quick access list ── */}
+        {visibleQuick.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+              <View style={styles.quickCard}>
+                {visibleQuick.map((item, i) => (
+                    <Pressable
+                        key={item.label}
+                        style={({ pressed }) => [
+                          styles.quickRow,
+                          i < visibleQuick.length - 1 && styles.quickRowBorder,
+                          pressed && styles.quickRowPressed,
+                        ]}
+                        onPress={() => router.push(item.route as never)}
+                    >
+                      <View style={styles.quickIconBox}>
+                        <MaterialIcons name={item.icon} size={15} color={palette.primary} />
+                      </View>
+                      <Text style={styles.quickLabel}>{item.label}</Text>
+                      <MaterialIcons name="chevron-right" size={18} color={palette.primary + "40"} />
+                    </Pressable>
+                ))}
+              </View>
+            </>
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
   );
 }
-
-const RADIUS = 14;
 
 const styles = StyleSheet.create({
   root: {
@@ -130,165 +208,246 @@ const styles = StyleSheet.create({
     backgroundColor: palette.background,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: 28,
   },
 
-  // Header
-  header: {
+  // Hero
+  hero: {
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: palette.primary,
+    paddingHorizontal: 20,
+    paddingTop: 52,
+    paddingBottom: 52,
+    marginBottom: -32,
+  },
+  glowOne: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    top: -60,
+    right: -50,
+  },
+  glowTwo: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    bottom: -40,
+    left: -20,
+  },
+  heroTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 20,
-    paddingBottom: 16,
+    marginBottom: 20,
   },
-  headerEyebrow: {
-    fontSize: 10,
+  brandBlock: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  brandDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandText: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
     fontWeight: "700",
-    letterSpacing: 2,
-    color: palette.primary + "90",
+  },
+  notifBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifDot: {
+    position: "absolute",
+    top: 7,
+    right: 7,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#f87171",
+    borderWidth: 1.5,
+    borderColor: palette.primary,
+  },
+  welcomeRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+  },
+  welcomeLabel: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 13,
+    fontWeight: "500",
     marginBottom: 2,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: palette.primary,
-    letterSpacing: -0.5,
+  heroUserName: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
   logoutBtn: {
-    backgroundColor: palette.primary,
-    borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   logoutText: {
     color: "#fff",
     fontWeight: "700",
-    fontSize: 14,
-    letterSpacing: 0.3,
+    fontSize: 13,
   },
 
-  // User card
-  userCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    backgroundColor: palette.primary + "0D",
-    borderRadius: RADIUS,
-    borderWidth: 1.5,
-    borderColor: palette.primary + "20",
-    padding: 16,
-    marginBottom: 28,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  avatarText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  userInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: palette.primary,
-  },
-  roleBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: palette.primary + "18",
-    borderRadius: 99,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  roleText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: palette.primary,
-    letterSpacing: 0.4,
-  },
-
-  // Section
-  sectionEyebrow: {
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    color: palette.primary + "90",
-    marginBottom: 2,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: palette.primary,
-    letterSpacing: -0.3,
-    marginBottom: 14,
-  },
-
-  // Shortcut cards
-  cardList: {
-    gap: 12,
-  },
-  shortcutCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
+  // Stats card
+  statsCard: {
     backgroundColor: "#fff",
-    borderRadius: RADIUS,
-    borderWidth: 1.5,
-    borderColor: palette.primary + "15",
-    padding: 16,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2,
+    borderRadius: 20,
+    marginHorizontal: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 6,
+    marginBottom: 24,
   },
-  shortcutCardPressed: {
-    opacity: 0.75,
-    backgroundColor: palette.primary + "08",
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 5,
   },
-  shortcutIconBox: {
-    width: 44,
-    height: 44,
+  statIcon: {
+    width: 36,
+    height: 36,
     borderRadius: 12,
     backgroundColor: palette.primary + "12",
     alignItems: "center",
     justifyContent: "center",
   },
-  shortcutIcon: {
-    fontSize: 20,
+  statValue: {
+    color: palette.text,
+    fontSize: 16,
+    fontWeight: "800",
   },
-  shortcutInfo: {
-    flex: 1,
-    gap: 3,
+  statLabel: {
+    color: palette.textMuted,
+    fontSize: 10,
+    textAlign: "center",
+    lineHeight: 13,
   },
-  shortcutTitle: {
-    fontSize: 15,
+
+  // Section title
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: "700",
-    color: palette.primary,
+    color: palette.text,
+    marginBottom: 12,
+    paddingHorizontal: 18,
   },
-  shortcutDescription: {
-    fontSize: 12,
+
+  // Modules grid
+  moduleGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 18,
+    gap: 12,
+    marginBottom: 24,
+  },
+  moduleCard: {
+    width: "47%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
+    shadowColor: palette.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  moduleCardPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.97 }],
+  },
+  moduleIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: palette.primary + "12",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  moduleTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.text,
+    lineHeight: 18,
+    marginBottom: 3,
+  },
+  moduleDescription: {
+    fontSize: 11,
+    color: palette.textMuted,
+    lineHeight: 15,
+  },
+
+  // Quick access
+  quickCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginHorizontal: 18,
+    borderWidth: 1,
+    borderColor: palette.border,
+    overflow: "hidden",
+    shadowColor: palette.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 8,
+  },
+  quickRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  quickRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
+  },
+  quickRowPressed: {
+    backgroundColor: palette.primary + "08",
+  },
+  quickIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: palette.primary + "12",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: palette.text,
     fontWeight: "500",
-    color: palette.primary + "80",
-    lineHeight: 17,
   },
 });

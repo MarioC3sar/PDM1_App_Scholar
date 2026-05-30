@@ -1,15 +1,18 @@
 export const palette = {
-  background: "#f4f7fb",
+  background: "#eef3fb",
   surface: "#ffffff",
-  surfaceAlt: "#e9f0ff",
-  primary: "#0d3b66",
-  secondary: "#3c6997",
+  surfaceAlt: "#f4f7ff",
+  primary: "#0f4c81",
+  primarySoft: "#dfeefe",
+  secondary: "#335c89",
   accent: "#f4a259",
-  text: "#102033",
-  textMuted: "#5e6b7a",
-  border: "#d7dfeb",
+  accentSoft: "#fff1e6",
+  text: "#122033",
+  textMuted: "#64748b",
+  border: "#d8e1ee",
   success: "#2a9d8f",
   danger: "#d64545",
+  warning: "#d97706",
 };
 
 export const Colors = {

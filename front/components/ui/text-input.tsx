@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import {
   TextInput as RNTextInput,
   StyleSheet,
@@ -15,13 +15,8 @@ interface CustomTextInputProps extends TextInputProps {
   required?: boolean;
 }
 
-export const TextInput: React.FC<CustomTextInputProps> = ({
-  label,
-  error,
-  containerStyle,
-  required = false,
-  ...props
-}) => {
+export const TextInput = forwardRef<RNTextInput, CustomTextInputProps>(
+  ({ label, error, containerStyle, required = false, ...props }, ref) => {
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -31,6 +26,7 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
         </Text>
       )}
       <RNTextInput
+        ref={ref}
         style={[styles.input, error && styles.inputError]}
         placeholderTextColor="#999"
         {...props}
@@ -38,7 +34,10 @@ export const TextInput: React.FC<CustomTextInputProps> = ({
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
-};
+  },
+);
+
+TextInput.displayName = "TextInput";
 
 const styles = StyleSheet.create({
   container: {
@@ -46,28 +45,28 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: "700",
+    color: "#122033",
     marginBottom: 8,
   },
   required: {
-    color: "#FF3B30",
+    color: "#d64545",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderColor: "#d8e1ee",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     fontSize: 14,
     backgroundColor: "#fff",
-    color: "#333",
+    color: "#122033",
   },
   inputError: {
-    borderColor: "#FF3B30",
+    borderColor: "#d64545",
   },
   errorText: {
-    color: "#FF3B30",
+    color: "#d64545",
     fontSize: 12,
     marginTop: 4,
     fontWeight: "500",

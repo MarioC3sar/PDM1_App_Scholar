@@ -49,7 +49,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#eef3fb",
   },
   content: {
     flexGrow: 1,

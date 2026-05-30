@@ -1,4 +1,31 @@
+import * as SecureStore from "expo-secure-store";
+import api from "@/services/api";
 import { LoginCredentials, User } from "@/types";
+
+type LoginResponse = {
+  token: string;
+  usuario: {
+    id: number;
+    nome: string;
+    email: string;
+    perfil: "ADMIN" | "PROFESSOR" | "ALUNO" | string;
+    primeiroAcesso: boolean;
+    matricula?: string;
+  };
+};
+
+const normalizePerfil = (perfil: string): User["perfil"] => {
+  switch (perfil.toUpperCase()) {
+    case "ADMIN":
+      return "admin";
+    case "PROFESSOR":
+      return "professor";
+    case "ALUNO":
+      return "aluno";
+    default:
+      return "admin";
+  }
+};
 
 export const loginWithApi = async (
   credentials: LoginCredentials,
@@ -8,31 +35,36 @@ export const loginWithApi = async (
   }
 
   try {
-    const response = await fetch("http://192.168.15.13:3000/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: credentials.login, 
-        password: credentials.password,
-      }),
+    const response = await api.post<LoginResponse>("/login", {
+      login: credentials.login,
+      password: credentials.password,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || "Falha na autenticação. Verifique suas credenciais."
-      );
-    }
+    const { token, usuario } = response.data;
 
-    const data = await response.json();
-    
-    // O backend retorna { token, usuario: { id, nome, perfil, email } }
-    return data.usuario as User;
+    await SecureStore.setItemAsync("userToken", token);
 
+    return {
+      id: String(usuario.id),
+      nome: usuario.nome,
+      email: usuario.email,
+      perfil: normalizePerfil(usuario.perfil),
+      firstAccess:
+        usuario.perfil.toUpperCase() === "ADMIN" ? false : usuario.primeiroAcesso,
+      matricula: usuario.matricula,
+    };
   } catch (error) {
-    console.error("Erro na requisição de login:", error);
-    throw error; 
+    console.error("Erro na requisicao de login:", error);
+    throw error instanceof Error
+      ? error
+      : new Error("Falha na autenticacao. Verifique suas credenciais.");
   }
+};
+
+export const changeFirstAccessPassword = async (
+  newPassword: string,
+): Promise<void> => {
+  await api.put("/auth/first-access", {
+    novaSenha: newPassword,
+  });
 };

@@ -8,6 +8,7 @@ export interface User {
   nome: string;
   email: string;
   perfil: "aluno" | "professor" | "admin";
+  firstAccess: boolean;
   matricula?: string;
 }
 
@@ -16,6 +17,7 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
+  completeFirstAccess: () => void;
   logout: () => void;
 }
 
@@ -38,7 +40,6 @@ export interface StudentFormData {
   nome: string;
   matricula: string;
   curso: string;
-  email: string;
   telefone: string;
   cep: string;
   logradouro: string;
@@ -82,6 +83,19 @@ export interface CourseFormData {
   semestre: string;
 }
 
+export interface CourseOption {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+}
+
+export interface StudentAccountResult {
+  student: Student;
+  emailInstitucional: string;
+  senhaTemporaria: string;
+  primeiroAcesso: boolean;
+}
+
 export interface GradeEntry {
   id: string;
   matricula: string;
@@ -97,18 +111,21 @@ export interface AcademicContextType {
   students: Student[];
   teachers: Teacher[];
   courses: Course[];
+  availableCourses: CourseOption[];
   grades: GradeEntry[];
   states: string[];
   cities: string[];
   loadingStates: boolean;
   loadingCities: boolean;
-  addStudent: (student: StudentFormData) => Promise<void>;
+  loadingCourses: boolean;
+  addStudent: (student: StudentFormData) => Promise<StudentAccountResult>;
   addTeacher: (teacher: TeacherFormData) => Promise<void>;
   addCourse: (course: CourseFormData) => Promise<void>;
   updateGrade: (gradeId: string, updates: Pick<GradeEntry, "nota1" | "nota2">) => Promise<void>;
   searchAddressByCep: (cep: string) => Promise<Partial<StudentFormData>>;
   loadStates: () => Promise<void>;
   loadCitiesByState: (uf: string) => Promise<void>;
+  loadCourses: () => Promise<void>;
 }
 
 export interface ValidationErrors {

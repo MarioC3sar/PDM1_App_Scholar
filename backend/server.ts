@@ -1,14 +1,9 @@
-
 import dotenv from "dotenv";
 import cors from "cors";
-
 import express from "express";
-import { connectToDatabase } from "./database/connection";
-import authRoutes from "./routes/authRoutes";
-import coursesRoutes from "./routes/coursesRoutes";
-import gradeRoutes from "./routes/gradeRoutes";
-import studentsRoutes from "./routes/studentsRoutes";
-import teachersRoutes from "./routes/teachersRoutes";
+
+// Importa o NOVO arquivo central de rotas que criamos
+import routes from "./routes/routes";
 
 dotenv.config();
 
@@ -18,30 +13,28 @@ const PORT = Number(process.env.PORT || 3000);
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", authRoutes);
-app.use("/api", studentsRoutes);
-app.use("/api", teachersRoutes);
-app.use("/api", coursesRoutes);
-app.use("/api", gradeRoutes);
+// Toda a mágica das rotas (Login, Alunos, etc) agora acontece em uma única linha!
+app.use("/api", routes);
 
 app.get("/", (_req, res) => {
   res.json({
-    message: "API academica AppScholar em execucao.",
-    endpoints: [
+    message: "API Acadêmica AppScholar em execução (Versão Prisma 🚀).",
+    endpoints_principais: [
       "POST /api/login",
       "POST /api/alunos",
       "POST /api/professores",
       "POST /api/disciplinas",
-      "GET /api/boletim/:matricula",
+      "GET /api/notas/:matricula",
     ],
   });
 });
 
 const startServer = async () => {
-  await connectToDatabase();
+  // O Prisma faz a conexão com o banco de forma automática na primeira requisição,
+  // então não precisamos mais daquele 'await connectToDatabase()' antigo.
 
   app.listen(PORT, () => {
-    console.log(`Servidor AppScholar iniciado na porta ${PORT}.`);
+    console.log(`🚀 Servidor AppScholar iniciado com sucesso na porta ${PORT}.`);
   });
 };
 
