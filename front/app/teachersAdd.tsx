@@ -1,4 +1,4 @@
-import { Button, Card, ErrorMessage, ScreenContainer, TextInput } from "@/components/ui";
+import { Button, ErrorMessage, ScreenContainer, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
 import { useForm } from "@/hooks/use-form";
@@ -6,6 +6,7 @@ import { TeacherFormData } from "@/types";
 import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const initialValues: TeacherFormData = {
   nome: "",
@@ -18,9 +19,7 @@ const initialValues: TeacherFormData = {
 const validate = (values: TeacherFormData) => {
   const errors: Record<string, string> = {};
   Object.entries(values).forEach(([field, value]) => {
-    if (!value.trim()) {
-      errors[field] = "Campo obrigatorio.";
-    }
+    if (!value.trim()) errors[field] = "Campo obrigatorio.";
   });
   return errors;
 };
@@ -34,28 +33,36 @@ export default function TeachersScreen() {
       async (formValues) => {
         await addTeacher(formValues);
         reset();
+        router.push("/teachersList");
       },
       validate,
   );
 
   return (
       <ScreenContainer>
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerEyebrow}>GESTÃO</Text>
-            <Text style={styles.headerTitle}>Professores</Text>
+        {/* ── Hero ── */}
+        <View style={styles.hero}>
+          <View style={styles.glowOne} />
+          <View style={styles.glowTwo} />
+
+          <View style={styles.heroTop}>
+            <View style={styles.heroBrand}>
+              <MaterialIcons name="person" size={16} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroBrandText}>Gestão de Professores</Text>
+            </View>
           </View>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.82}>
-            <Text style={styles.backBtnText}>← Voltar</Text>
-          </TouchableOpacity>
+
+          <Text style={styles.heroSubtitle}>
+            Preencha os campos de titulação, área de atuação e tempo de docência.
+          </Text>
         </View>
 
-        <Text style={styles.subtitle}>
-          Preencha os campos obrigatorios de titulacao, area de atuacao e tempo de docencia.
-        </Text>
+        {/* ── Form ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Novo Professor</Text>
+        </View>
 
-        <Card variant="elevated">
+        <View style={styles.formCard}>
           <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
           <TextInput
@@ -66,21 +73,21 @@ export default function TeachersScreen() {
               required
           />
           <TextInput
-              label="Titulacao"
+              label="Titulação"
               value={values.titulacao}
               onChangeText={(text) => handleChange("titulacao", text)}
               error={errors.titulacao}
               required
           />
           <TextInput
-              label="Area de atuacao"
+              label="Área de atuação"
               value={values.area}
               onChangeText={(text) => handleChange("area", text)}
               error={errors.area}
               required
           />
           <TextInput
-              label="Tempo de docencia"
+              label="Tempo de docência"
               value={values.tempoDocencia}
               onChangeText={(text) => handleChange("tempoDocencia", text)}
               error={errors.tempoDocencia}
@@ -97,73 +104,133 @@ export default function TeachersScreen() {
           />
 
           <Button
-              title={loading ? "Salvando..." : "Salvar professor"}
+              title={loading ? "Salvando..." : "Cadastrar Professor"}
               loading={loading}
               onPress={handleSubmit}
           />
-        </Card>
+        </View>
 
-        <Text style={styles.sectionTitle}>Professores cadastrados</Text>
-
-        <Button
-            title="Ver Lista"
-            loading={loading}
+        {/* ── Link to list ── */}
+        <TouchableOpacity
+            style={styles.listLink}
             onPress={() => router.push("/teachersList")}
-        />
+            activeOpacity={0.75}
+        >
+          <Text style={styles.listLinkText}>Ver professores cadastrados →</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 32 }} />
       </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  // Hero
+  hero: {
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: palette.primary,
+    borderRadius: 28,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: palette.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  glowOne: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    top: -60,
+    right: -50,
+  },
+  glowTwo: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    bottom: -40,
+    left: -20,
+  },
+  heroTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: 20,
-    paddingBottom: 12,
+    marginBottom: 18,
   },
-  headerEyebrow: {
-    fontSize: 10,
+  heroBrand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  heroBrandText: {
+    color: "#fff",
+    fontSize: 12,
     fontWeight: "700",
-    letterSpacing: 2,
-    color: palette.primary + "90",
-    marginBottom: 2,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: palette.primary,
-    letterSpacing: -0.5,
   },
   backBtn: {
-    backgroundColor: palette.primary,
-    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: 999,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    paddingHorizontal: 18,
-    shadowColor: palette.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   backBtnText: {
     color: "#fff",
-    fontWeight: "700",
-    fontSize: 14,
-    letterSpacing: 0.3,
-  },
-  subtitle: {
     fontSize: 13,
-    color: palette.primary + "80",
-    fontWeight: "500",
-    lineHeight: 20,
-    marginBottom: 18,
+    fontWeight: "700",
+  },
+  heroSubtitle: {
+    color: "#d8ebff",
+    fontSize: 13,
+    lineHeight: 19,
+  },
+
+  // Section
+  sectionHeader: {
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
     color: palette.text,
-    marginTop: 20,
-    marginBottom: 8,
+  },
+
+  // Form card
+  formCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: palette.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+
+  // List link
+  listLink: {
+    padding: 14,
+    backgroundColor: palette.primary + "0D",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: palette.primary + "20",
+    alignItems: "center",
+  },
+  listLinkText: {
+    color: palette.primary,
+    fontWeight: "700",
+    fontSize: 13,
   },
 });

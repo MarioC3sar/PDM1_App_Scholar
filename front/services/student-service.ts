@@ -106,3 +106,24 @@ export const createStudentOnApi = async (
       : new Error("Falha ao cadastrar aluno.");
   }
 };
+
+export const getStudentsFromApi = async (): Promise<Student[]> => {
+  try {
+    const response = await api.get<Student[]>("/alunos");
+    return response.data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const backendMessage =
+        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
+          ?.message ??
+        (error.response?.data as { detalhes?: { message?: string } } | undefined)
+          ?.detalhes?.message;
+
+      throw new Error(backendMessage ?? "Falha ao buscar alunos.");
+    }
+
+    throw error instanceof Error
+      ? error
+      : new Error("Falha ao buscar alunos.");
+  }
+};

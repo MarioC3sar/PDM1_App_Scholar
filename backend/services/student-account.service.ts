@@ -64,6 +64,7 @@ export type CreateStudentAccountResult = {
     id: number;
     nome: string;
     matricula: string;
+    emailPessoal: string | null;
     telefone: string | null;
     cep: string | null;
     logradouro: string | null;
@@ -103,6 +104,7 @@ export const createStudentAccount = async (
       data: {
         nome: data.nome,
         matricula: data.matricula,
+        emailPessoal: data.email,
         cursoId: data.cursoId,
         usuarioId: usuario.id,
         telefone: data.telefone ?? null,
@@ -117,6 +119,7 @@ export const createStudentAccount = async (
         id: true,
         nome: true,
         matricula: true,
+        emailPessoal: true,
         telefone: true,
         cep: true,
         logradouro: true,

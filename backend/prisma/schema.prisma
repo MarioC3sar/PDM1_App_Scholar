@@ -55,6 +55,7 @@ model Aluno {
   id         Int     @id @default(autoincrement())
   nome       String
   matricula  String  @unique
+  emailPessoal String? @map("email_pessoal")
   telefone   String?
   cep        String?
   logradouro String?

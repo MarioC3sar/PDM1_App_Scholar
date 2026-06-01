@@ -10,7 +10,7 @@ Content-Type: application/json
   "nome": "Mario",
   "matricula": "123",
   "cursoId": "texto_invalido",
-  "email": "email_errado"
+  "email": "mario@email.com"
 }
 
 ### 3. Criar usuario administrador

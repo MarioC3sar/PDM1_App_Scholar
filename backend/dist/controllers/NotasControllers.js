@@ -12,20 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateGrade = exports.getGrades = void 0;
-const client_1 = require("@prisma/client");
+exports.updateGrade = exports.getProfessorDisciplineStudents = exports.getProfessorDisciplines = exports.getMyGrades = exports.getGrades = void 0;
 const prismaClient_1 = __importDefault(require("../prismaClient"));
-// Atualizado para bater com o Enum SituacaoNota do esquema Prisma
-const computeSituacao = (media) => {
-    if (media >= 6)
-        return client_1.SituacaoNota.APROVADO;
-    if (media < 4)
-        return client_1.SituacaoNota.REPROVADO;
-    // Se a média estiver entre 4 e 5.9, ele não está aprovado nem reprovado direto (Exame/Análise).
-    // Como no nosso schema usamos CURSANDO, APROVADO e REPROVADO, mantemos como CURSANDO ou podes
-    // adicionar um status "EXAME" no seu schema.prisma futuramente se a faculdade tiver essa regra.
-    return client_1.SituacaoNota.CURSANDO;
-};
+const grades_service_1 = require("../services/grades.service");
 const getGrades = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { matricula } = req.params;
@@ -84,47 +73,117 @@ const getGrades = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getGrades = getGrades;
-const updateGrade = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMyGrades = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        // Agora o professor também pode mandar as faltas no corpo da requisição
-        const { nota1, nota2, faltas } = req.body;
-        // Busca a nota atual no banco
-        const grade = yield prismaClient_1.default.nota.findUnique({
-            where: { id: Number(id) }
-        });
-        if (!grade) {
-            return res.status(404).json({ message: "Registro de nota não encontrado." });
+        if (!req.user) {
+            return res.status(401).json({ message: "Não autenticado." });
         }
-        // Mantém o valor que já estava no banco caso o professor envie apenas 1 nota
-        const nextNota1 = nota1 !== undefined ? Number(nota1) : grade.nota1;
-        const nextNota2 = nota2 !== undefined ? Number(nota2) : grade.nota2;
-        const nextFaltas = faltas !== undefined ? Number(faltas) : grade.faltas;
-        let media = grade.media;
-        let situacao = grade.situacao;
-        // Só calcula a média se o aluno já tiver as duas notas lançadas
-        if (nextNota1 !== null && nextNota2 !== null) {
-            media = (nextNota1 + nextNota2) / 2;
-            situacao = computeSituacao(media);
+        if (req.user.perfil !== "ALUNO") {
+            return res.status(403).json({
+                message: "Apenas alunos podem acessar o boletim proprio por esta rota.",
+            });
         }
-        // Atualiza tudo no banco de uma vez só
-        const notaAtualizada = yield prismaClient_1.default.nota.update({
-            where: { id: Number(id) },
-            data: {
-                nota1: nextNota1,
-                nota2: nextNota2,
-                faltas: nextFaltas, // Atualiza as faltas
-                media: media,
-                situacao: situacao,
-            }
+        const student = yield prismaClient_1.default.aluno.findUnique({
+            where: { usuarioId: req.user.id },
+            include: {
+                notas: {
+                    include: {
+                        disciplina: { select: { nome: true } },
+                    },
+                    orderBy: { id: "asc" },
+                },
+            },
         });
+        if (!student) {
+            return res.status(404).json({
+                message: "Aluno não encontrado para o usuario autenticado.",
+            });
+        }
         return res.json({
-            message: "Notas atualizadas com sucesso.",
-            nota: notaAtualizada,
+            aluno: student.nome,
+            matricula: student.matricula,
+            disciplinas: student.notas.map((nota) => ({
+                id: nota.id,
+                disciplina: nota.disciplina.nome,
+                nota1: nota.nota1,
+                nota2: nota.nota2,
+                media: nota.media,
+                faltas: nota.faltas,
+                situacao: nota.situacao,
+            })),
         });
     }
     catch (error) {
+        console.error("Erro ao buscar boletim proprio:", error);
+        return res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+exports.getMyGrades = getMyGrades;
+const getProfessorDisciplines = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Não autenticado." });
+        }
+        if (req.user.perfil !== "PROFESSOR") {
+            return res.status(403).json({ message: "Apenas professores podem acessar esta rota." });
+        }
+        const result = yield (0, grades_service_1.listProfessorDisciplines)(req.user.id);
+        return res.json(result);
+    }
+    catch (error) {
+        console.error("Erro ao carregar disciplinas do professor:", error);
+        if (error instanceof grades_service_1.AppError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+exports.getProfessorDisciplines = getProfessorDisciplines;
+const getProfessorDisciplineStudents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Não autenticado." });
+        }
+        if (req.user.perfil !== "PROFESSOR" && req.user.perfil !== "ADMIN") {
+            return res.status(403).json({ message: "Acesso negado para este perfil." });
+        }
+        const disciplinaId = Number(req.params.disciplinaId);
+        if (!Number.isFinite(disciplinaId)) {
+            return res.status(400).json({ message: "Disciplina inválida." });
+        }
+        const result = yield (0, grades_service_1.getProfessorDisciplineGrades)(req.user.id, disciplinaId, req.user.perfil);
+        return res.json(result);
+    }
+    catch (error) {
+        console.error("Erro ao carregar notas da disciplina:", error);
+        if (error instanceof grades_service_1.AppError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+exports.getProfessorDisciplineStudents = getProfessorDisciplineStudents;
+const updateGrade = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Não autenticado." });
+        }
+        const notaId = Number(req.params.id);
+        if (!Number.isFinite(notaId)) {
+            return res.status(400).json({ message: "Nota inválida." });
+        }
+        const result = yield (0, grades_service_1.updateStudentGrade)(req.user.id, req.user.perfil, notaId, {
+            nota1: req.body.nota1,
+            nota2: req.body.nota2,
+            faltas: req.body.faltas,
+        });
+        return res.json(result);
+    }
+    catch (error) {
         console.error("Erro ao atualizar notas:", error);
+        if (error instanceof grades_service_1.AppError) {
+            return res.status(error.statusCode).json({ message: error.message });
+        }
         return res.status(500).json({ message: "Erro interno do servidor." });
     }
 });

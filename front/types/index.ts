@@ -26,7 +26,8 @@ export interface Student {
   nome: string;
   matricula: string;
   curso: string;
-  email: string;
+  emailPessoal: string;
+  emailInstitucional: string;
   telefone: string;
   cep: string;
   logradouro: string;
@@ -40,6 +41,7 @@ export interface StudentFormData {
   nome: string;
   matricula: string;
   curso: string;
+  email: string;
   telefone: string;
   cep: string;
   logradouro: string;
@@ -118,6 +120,9 @@ export interface AcademicContextType {
   loadingStates: boolean;
   loadingCities: boolean;
   loadingCourses: boolean;
+  loadingDisciplines: boolean;
+  loadingStudents: boolean;
+  loadingTeachers: boolean;
   addStudent: (student: StudentFormData) => Promise<StudentAccountResult>;
   addTeacher: (teacher: TeacherFormData) => Promise<void>;
   addCourse: (course: CourseFormData) => Promise<void>;
@@ -126,6 +131,9 @@ export interface AcademicContextType {
   loadStates: () => Promise<void>;
   loadCitiesByState: (uf: string) => Promise<void>;
   loadCourses: () => Promise<void>;
+  loadDisciplines: () => Promise<void>;
+  loadStudents: () => Promise<void>;
+  loadTeachers: () => Promise<void>;
 }
 
 export interface ValidationErrors {

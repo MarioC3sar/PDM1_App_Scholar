@@ -118,9 +118,9 @@ export default function GradesScreen() {
     <ScreenContainer>
       <View style={styles.hero}>
         <View style={styles.heroHeader}>
-          <Button title="Voltar" variant="secondary" onPress={() => router.back()} />
+
           <View style={styles.heroBadge}>
-            <MaterialIcons name="assessment" size={16} color={palette.primary} />
+            <MaterialIcons name="assessment" size={16} color={palette.background} />
             <Text style={styles.heroBadgeText}>Boletim</Text>
           </View>
         </View>

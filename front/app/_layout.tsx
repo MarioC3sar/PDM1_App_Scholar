@@ -23,7 +23,7 @@ function RootNavigator() {
     const inFirstAccessGroup = segments[0] === "firstAccess";
     const currentRoute = segments[0] ?? "";
 
-    const adminOnlyRoutes = new Set(["students", "studentsList", "teachers", "teachersList", "courses"]);
+    const adminOnlyRoutes = new Set(["studentsAdd", "studentsList", "teachersAdd", "teachersList", "courses"]);
     const professorOnlyRoutes = new Set(["gradeEditor"]);
     const professorBlockedRoutes = new Set(["grades"]);
 
@@ -49,7 +49,8 @@ function RootNavigator() {
       isAuthenticated &&
       !firstAccess &&
       professorOnlyRoutes.has(currentRoute) &&
-      user?.perfil !== "professor"
+      user?.perfil !== "professor" &&
+      user?.perfil !== "admin"
     ) {
       router.replace("/(tabs)/dashboard");
     } else if (
@@ -69,9 +70,9 @@ function RootNavigator() {
         <Stack.Screen name="login" />
         <Stack.Screen name="firstAccess" />
         <Stack.Screen name="studentsList" />
-        <Stack.Screen name="students" />
         <Stack.Screen name="teachersList" />
-        <Stack.Screen name="teachers" />
+        <Stack.Screen name="studentsAdd" />
+        <Stack.Screen name="teachersAdd" />
         <Stack.Screen name="courses" />
         <Stack.Screen name="grades" />
         <Stack.Screen name="gradeEditor" />

@@ -1,8 +1,10 @@
 import { palette } from "@/constants/theme";
 import { useAuth } from "@/hooks/use-auth";
-import { useAcademicData } from "@/hooks/use-academic-data";
+import { getDisciplinesFromApi } from "@/services/discipline-service";
+import { getStudentsFromApi } from "@/services/student-service";
+import { getTeachersFromApi } from "@/services/teacher-service";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -25,14 +27,14 @@ const modules: {
   {
     title: "Cadastro de Alunos",
     description: "Gerenciar alunos matriculados",
-    route: "/studentsList",
+    route: "/studentsAdd",
     icon: "school",
     roles: ["admin"],
   },
   {
     title: "Cadastro de Professores",
     description: "Gerenciar corpo docente",
-    route: "/teachersList",
+    route: "/teachersAdd",
     icon: "person",
     roles: ["admin"],
   },
@@ -55,7 +57,7 @@ const modules: {
     description: "Consulte disciplinas e altere notas",
     route: "/gradeEditor",
     icon: "edit",
-    roles: ["professor"],
+    roles: ["professor", "admin"],
   },
 ];
 
@@ -66,24 +68,61 @@ const quickAccess: {
   roles: Role[];
 }[] = [
   { label: "Ver todos os alunos",   route: "/studentsList", icon: "school",     roles: ["admin"] },
+  {label: "Ver todos os professores", route: "/teachersList", icon: "person",     roles: ["admin"] },
   { label: "Consultar boletins",    route: "/grades",       icon: "assessment", roles: ["admin", "aluno"] },
   { label: "Adicionar disciplina",  route: "/courses",      icon: "menu-book",  roles: ["admin"] },
-  { label: "Editar notas",          route: "/gradeEditor",  icon: "edit",       roles: ["professor"] },
+  { label: "Editar notas",          route: "/gradeEditor",  icon: "edit",       roles: ["professor", "admin"] },
 ];
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: "Administrador",
-  professor: "Professor",
-  aluno: "Aluno",
-};
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { students, teachers } = useAcademicData();
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [teacherCount, setTeacherCount] = useState<number | null>(null);
+  const [disciplineCount, setDisciplineCount] = useState<number | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState("");
 
-  const role: Role = user?.perfil ?? "aluno";
-  const initial = String(user?.nome ?? "?")[0].toUpperCase();
+  useEffect(() => {
+    let mounted = true;
+
+    const hydrateStats = async () => {
+      setLoadingStats(true);
+      setStatsError("");
+
+      try {
+        const [students, teachers, disciplines] = await Promise.all([
+          getStudentsFromApi(),
+          getTeachersFromApi(),
+          getDisciplinesFromApi(),
+        ]);
+
+        if (!mounted) return;
+
+        setStudentCount(students.length);
+        setTeacherCount(teachers.length);
+        setDisciplineCount(disciplines.length);
+      } catch (error) {
+        if (!mounted) return;
+        setStatsError(
+          error instanceof Error ? error.message : "Falha ao carregar indicadores.",
+        );
+        setStudentCount(0);
+        setTeacherCount(0);
+        setDisciplineCount(0);
+      } finally {
+        if (mounted) {
+          setLoadingStats(false);
+        }
+      }
+    };
+
+    hydrateStats().catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const visibleModules = modules.filter((m) =>
       user ? m.roles.includes(user.perfil) : false,
@@ -93,10 +132,22 @@ export default function DashboardScreen() {
   );
 
   const stats = [
-    { label: "Alunos",      value: students.length, icon: "school"      as keyof typeof MaterialIcons.glyphMap },
-    { label: "Professores", value: teachers.length, icon: "person"      as keyof typeof MaterialIcons.glyphMap },
-    { label: "Disciplinas", value: 0,               icon: "menu-book"   as keyof typeof MaterialIcons.glyphMap },
-    { label: "Aprovação",   value: "85%",           icon: "trending-up" as keyof typeof MaterialIcons.glyphMap },
+    {
+      label: "Alunos",
+      value: loadingStats ? "..." : studentCount ?? 0,
+      icon: "school" as keyof typeof MaterialIcons.glyphMap,
+    },
+    {
+      label: "Professores",
+      value: loadingStats ? "..." : teacherCount ?? 0,
+      icon: "person" as keyof typeof MaterialIcons.glyphMap,
+    },
+    {
+      label: "Disciplinas",
+      value: loadingStats ? "..." : disciplineCount ?? 0,
+      icon: "menu-book" as keyof typeof MaterialIcons.glyphMap,
+    },
+    { label: "Aprovação", value: "85%", icon: "trending-up" as keyof typeof MaterialIcons.glyphMap },
   ];
 
   return (
@@ -110,20 +161,6 @@ export default function DashboardScreen() {
           <View style={styles.glowOne} />
           <View style={styles.glowTwo} />
 
-          {/* Top row */}
-          <View style={styles.heroTopRow}>
-            <View style={styles.brandBlock}>
-              <View style={styles.brandDot}>
-                <MaterialIcons name="school" size={16} color="#fff" />
-              </View>
-              <Text style={styles.brandText}>FATEC Acadêmico</Text>
-            </View>
-            <TouchableOpacity style={styles.notifBtn} activeOpacity={0.8}>
-              <MaterialIcons name="notifications" size={18} color="#fff" />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-          </View>
-
           {/* Welcome */}
           <View style={styles.welcomeRow}>
             <View>
@@ -134,7 +171,17 @@ export default function DashboardScreen() {
               <Text style={styles.logoutText}>Sair</Text>
             </TouchableOpacity>
           </View>
+
+
+
+
         </View>
+
+        {statsError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{statsError}</Text>
+          </View>
+        ) : null}
 
         {/* ── Stats card (overlapping hero) ── */}
         <View style={styles.statsCard}>
@@ -257,11 +304,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 40,
   },
   brandText: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 13,
     fontWeight: "700",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 40
   },
   notifBtn: {
     width: 36,
@@ -309,6 +360,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 13,
+  },
+
+  errorCard: {
+    marginHorizontal: 18,
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "rgba(220, 38, 38, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(220, 38, 38, 0.18)",
+  },
+  errorText: {
+    color: "#b91c1c",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
   },
 
   // Stats card

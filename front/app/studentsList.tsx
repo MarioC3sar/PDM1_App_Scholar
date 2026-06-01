@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,11 +11,11 @@ import {
   View,
 } from "react-native";
 
-import { Card, ScreenContainer } from "@/components/ui";
+import { ScreenContainer } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
 
-type FilterKey = "nome" | "curso" | "matricula" | "cidade" | "bairro" | "email";
+type FilterKey = "nome" | "curso" | "matricula" | "cidade" | "bairro" | "emailPessoal";
 
 const FILTER_OPTIONS: { key: FilterKey; label: string }[] = [
   { key: "nome",      label: "Nome" },
@@ -22,7 +23,7 @@ const FILTER_OPTIONS: { key: FilterKey; label: string }[] = [
   { key: "matricula", label: "Matrícula" },
   { key: "cidade",    label: "Cidade" },
   { key: "bairro",    label: "Bairro" },
-  { key: "email",     label: "E-mail" },
+  { key: "emailPessoal",     label: "E-mail pessoal" },
 ];
 
 function MetaRow({
@@ -49,10 +50,34 @@ function MetaRow({
 
 export default function StudentsList() {
   const router = useRouter();
-  const { students } = useAcademicData();
+  const { students, loadStudents, loadingStudents } = useAcademicData();
 
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterKey>("nome");
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const hydrateStudents = async () => {
+      setLoadError("");
+
+      try {
+        await loadStudents();
+      } catch (error) {
+        if (!mounted) return;
+        setLoadError(
+          error instanceof Error ? error.message : "Falha ao carregar alunos.",
+        );
+      }
+    };
+
+    hydrateStudents().catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, [loadStudents]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return students;
@@ -82,7 +107,7 @@ export default function StudentsList() {
             </Pressable>
           </View>
 
-          <Text style={styles.heroTitle}>Alunos</Text>
+
           <Text style={styles.heroSubtitle}>
             Filtre por nome, matrícula, curso ou endereço e encontre registros rapidamente.
           </Text>
@@ -137,12 +162,25 @@ export default function StudentsList() {
 
         {/* ── Count ── */}
         <Text style={styles.resultCount}>
-          {filtered.length} {filtered.length === 1 ? "aluno encontrado" : "alunos encontrados"}
+          {loadingStudents
+            ? "Carregando alunos do banco..."
+            : `${filtered.length} ${filtered.length === 1 ? "aluno encontrado" : "alunos encontrados"}`}
         </Text>
+
+        {loadError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{loadError}</Text>
+          </View>
+        ) : null}
 
         {/* ── List ── */}
         <View style={styles.list}>
-          {filtered.length === 0 ? (
+          {loadingStudents ? (
+              <View style={styles.loadingCard}>
+                <ActivityIndicator color={palette.primary} />
+                <Text style={styles.emptySubtitle}>Buscando alunos no banco de dados...</Text>
+              </View>
+          ) : filtered.length === 0 ? (
               <View style={styles.emptyCard}>
                 <View style={styles.emptyIconBox}>
                   <MaterialIcons name="school" size={32} color={palette.primary} />
@@ -168,7 +206,8 @@ export default function StudentsList() {
 
                     <View style={styles.metaGrid}>
                       <MetaRow icon="menu-book"   label="Curso"    value={student.curso} />
-                      <MetaRow icon="email"       label="E-mail"   value={student.email} />
+                      <MetaRow icon="email"       label="E-mail pessoal"   value={student.emailPessoal} />
+                      <MetaRow icon="email"       label="E-mail institucional" value={student.emailInstitucional} />
                       <MetaRow
                           icon="location-on"
                           label="Endereço"
@@ -338,8 +377,34 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  errorCard: {
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "rgba(220, 38, 38, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(220, 38, 38, 0.18)",
+  },
+  errorText: {
+    color: "#b91c1c",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+
   // List
   list: { gap: 12 },
+
+  loadingCard: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
 
   // Student card
   studentCard: {

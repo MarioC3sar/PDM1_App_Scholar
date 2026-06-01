@@ -7,6 +7,7 @@ export const createStudentAccountSchema = z
     nome: z.string().min(3, "O nome deve ter no minimo 3 caracteres."),
     matricula: z.string().min(5, "A matricula deve ter no minimo 5 caracteres."),
     cursoId: z.coerce.number().int().positive("O ID do curso deve ser um numero valido e positivo."),
+    email: z.string().email("O e-mail pessoal deve ser valido."),
     telefone: z.string().optional(),
     cep: z.string().length(8, "O CEP deve ter exatamente 8 numeros.").optional(),
     logradouro: z.string().optional(),

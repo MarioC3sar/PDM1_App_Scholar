@@ -149,8 +149,8 @@ export const getProfessorDisciplineStudents = async (req: Request, res: Response
       return res.status(401).json({ message: "Não autenticado." });
     }
 
-    if (req.user.perfil !== "PROFESSOR") {
-      return res.status(403).json({ message: "Apenas professores podem acessar esta rota." });
+    if (req.user.perfil !== "PROFESSOR" && req.user.perfil !== "ADMIN") {
+      return res.status(403).json({ message: "Acesso negado para este perfil." });
     }
 
     const disciplinaId = Number(req.params.disciplinaId);
@@ -159,7 +159,11 @@ export const getProfessorDisciplineStudents = async (req: Request, res: Response
       return res.status(400).json({ message: "Disciplina inválida." });
     }
 
-    const result = await getProfessorDisciplineGrades(req.user.id, disciplinaId);
+    const result = await getProfessorDisciplineGrades(
+      req.user.id,
+      disciplinaId,
+      req.user.perfil,
+    );
     return res.json(result);
   } catch (error) {
     console.error("Erro ao carregar notas da disciplina:", error);

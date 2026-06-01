@@ -1,7 +1,9 @@
 import { loadCities, loadStates } from "@/services/location-service";
 import { getAddressByCep } from "@/services/address-service";
 import { getCoursesFromApi } from "@/services/course-service";
-import { createStudentOnApi } from "@/services/student-service";
+import { createDisciplineOnApi, getDisciplinesFromApi } from "@/services/discipline-service";
+import { getTeachersFromApi, createTeacherOnApi } from "@/services/teacher-service";
+import { createStudentOnApi, getStudentsFromApi } from "@/services/student-service";
 import {
   AcademicContextType,
   Course,
@@ -20,75 +22,7 @@ import React, {
   useState,
 } from "react";
 
-const initialTeachers: Teacher[] = [
-  {
-    id: "t-1",
-    nome: "Ana Paula Lima",
-    titulacao: "Mestre",
-    area: "Engenharia de Software",
-    tempoDocencia: "8 anos",
-    email: "ana.lima@appscholar.edu",
-  },
-];
 
-const initialCourses: Course[] = [
-  {
-    id: "c-1",
-    nome: "Programacao Mobile",
-    cargaHoraria: "80",
-    professorResponsavel: "Ana Paula Lima",
-    curso: "DSM",
-    semestre: "4",
-  },
-  {
-    id: "c-2",
-    nome: "Banco de Dados",
-    cargaHoraria: "60",
-    professorResponsavel: "Ana Paula Lima",
-    curso: "DSM",
-    semestre: "3",
-  },
-];
-
-const initialStudents: Student[] = [
-  {
-    id: "s-1",
-    nome: "Maria Souza",
-    matricula: "2024001",
-    curso: "DSM",
-    email: "maria@appscholar.edu",
-    telefone: "(11) 99999-1111",
-    cep: "12245000",
-    logradouro: "Rua das Flores",
-    numero: "120",
-    bairro: "Centro",
-    cidade: "Sao Jose dos Campos",
-    estado: "SP",
-  },
-];
-
-const initialGrades: GradeEntry[] = [
-  {
-    id: "g-1",
-    matricula: "2024001",
-    aluno: "Maria Souza",
-    disciplina: "Programacao Mobile",
-    nota1: 8,
-    nota2: 7,
-    media: 7.5,
-    situacao: "Aprovado",
-  },
-  {
-    id: "g-2",
-    matricula: "2024001",
-    aluno: "Maria Souza",
-    disciplina: "Banco de Dados",
-    nota1: 6,
-    nota2: 5,
-    media: 5.5,
-    situacao: "Em analise",
-  },
-];
 
 export const AcademicContext = createContext<AcademicContextType | undefined>(
   undefined,
@@ -111,13 +45,11 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
 
-  useEffect(() => {
-    setStudents(initialStudents);
-    setTeachers(initialTeachers);
-    setCourses(initialCourses);
-    setGrades(initialGrades);
-  }, []);
+
 
   const addStudent = useCallback(async (student: StudentFormData) => {
     const result = await createStudentOnApi(student);
@@ -126,12 +58,12 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
   }, []);
 
   const addTeacher = useCallback(async (teacher: TeacherFormData) => {
-    const newTeacher: Teacher = { id: `t-${Date.now()}`, ...teacher };
-    setTeachers((prev) => [newTeacher, ...prev]);
+    const result = await createTeacherOnApi(teacher);
+    setTeachers((prev) => [result.teacher, ...prev]);
   }, []);
 
   const addCourse = useCallback(async (course: CourseFormData) => {
-    const newCourse: Course = { id: `c-${Date.now()}`, ...course };
+    const newCourse = await createDisciplineOnApi(course);
     setCourses((prev) => [newCourse, ...prev]);
   }, []);
 
@@ -191,6 +123,33 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const hydrateDisciplines = useCallback(async () => {
+    setLoadingDisciplines(true);
+    try {
+      setCourses(await getDisciplinesFromApi());
+    } finally {
+      setLoadingDisciplines(false);
+    }
+  }, []);
+
+  const hydrateStudents = useCallback(async () => {
+    setLoadingStudents(true);
+    try {
+      setStudents(await getStudentsFromApi());
+    } finally {
+      setLoadingStudents(false);
+    }
+  }, []);
+
+  const hydrateTeachers = useCallback(async () => {
+    setLoadingTeachers(true);
+    try {
+      setTeachers(await getTeachersFromApi());
+    } finally {
+      setLoadingTeachers(false);
+    }
+  }, []);
+
   const value = useMemo<AcademicContextType>(
     () => ({
       students,
@@ -203,6 +162,9 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       loadingStates,
       loadingCities,
       loadingCourses,
+      loadingDisciplines,
+      loadingStudents,
+      loadingTeachers,
       addStudent,
       addTeacher,
       addCourse,
@@ -211,6 +173,9 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       loadStates: hydrateStates,
       loadCitiesByState: hydrateCities,
       loadCourses: hydrateCourses,
+      loadDisciplines: hydrateDisciplines,
+      loadStudents: hydrateStudents,
+      loadTeachers: hydrateTeachers,
     }),
     [
       students,
@@ -223,6 +188,9 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       loadingStates,
       loadingCities,
       loadingCourses,
+      loadingDisciplines,
+      loadingStudents,
+      loadingTeachers,
       addStudent,
       addTeacher,
       addCourse,
@@ -231,6 +199,9 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
       hydrateStates,
       hydrateCities,
       hydrateCourses,
+      hydrateDisciplines,
+      hydrateStudents,
+      hydrateTeachers,
     ],
   );
 

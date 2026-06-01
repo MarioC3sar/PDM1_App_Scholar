@@ -73,12 +73,12 @@ export default function LoginScreen() {
 
             {/* ── Form card ── */}
             <View style={styles.formCard}>
-              <Text style={styles.formTitle}>Entrar</Text>
+
 
               <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
               <TextInput
-                  label="Login ou email"
+                  label="Email"
                   placeholder="seuemail@fatec.edu.br"
                   autoCapitalize="none"
                   value={values.login}

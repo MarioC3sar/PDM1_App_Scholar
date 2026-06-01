@@ -20,6 +20,26 @@ export type ProfessorDisciplinesResponse = {
   disciplinas: ProfessorDisciplineSummary[];
 };
 
+export type EditableDisciplineSummary = {
+  id: number;
+  nome: string;
+  semestre: string;
+  cargaHoraria: number;
+  totalAlunos?: number;
+  curso: {
+    id?: number;
+    nome: string;
+  };
+  professor?: {
+    nome: string;
+  };
+};
+
+type DisciplinesResponse = {
+  total: number;
+  disciplinas: EditableDisciplineSummary[];
+};
+
 export type ProfessorGradeItem = {
   id: number;
   alunoId: number;
@@ -56,7 +76,12 @@ export const getProfessorDisciplines = async (): Promise<ProfessorDisciplinesRes
   return response.data;
 };
 
-export const getProfessorDisciplineGrades = async (
+export const getAllDisciplines = async (): Promise<EditableDisciplineSummary[]> => {
+  const response = await api.get<DisciplinesResponse>("/disciplinas");
+  return response.data.disciplinas ?? [];
+};
+
+export const getDisciplineGrades = async (
   disciplinaId: number,
 ): Promise<ProfessorDisciplineGradesResponse> => {
   const response = await api.get<ProfessorDisciplineGradesResponse>(
@@ -64,6 +89,8 @@ export const getProfessorDisciplineGrades = async (
   );
   return response.data;
 };
+
+export const getProfessorDisciplineGrades = getDisciplineGrades;
 
 export const updateStudentGrade = async (
   notaId: number,

@@ -38,7 +38,7 @@ router.get("/notas/me", autorizar(["ALUNO"]), getMyGrades);
 router.get("/professores/me/disciplinas", autorizar(["PROFESSOR"]), getProfessorDisciplines);
 router.get(
   "/professores/me/disciplinas/:disciplinaId/notas",
-  autorizar(["PROFESSOR"]),
+  autorizar(["PROFESSOR", "ADMIN"]),
   getProfessorDisciplineStudents,
 );
 router.put("/notas/:id", autorizar(["PROFESSOR", "ADMIN"]), updateGrade);

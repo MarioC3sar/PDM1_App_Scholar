@@ -1,10 +1,12 @@
 import { Button, Card, ScreenContainer, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  getProfessorDisciplines,
-  getProfessorDisciplineGrades,
-  ProfessorDisciplineSummary,
+  getAllDisciplines,
+  getDisciplineGrades,
   ProfessorGradeItem,
+  EditableDisciplineSummary,
+  getProfessorDisciplines,
   updateStudentGrade,
 } from "@/services/grade-service";
 import { useRouter } from "expo-router";
@@ -44,7 +46,9 @@ const parseOptionalNumber = (value: string): number | undefined => {
 
 export const GradeEditorScreen = () => {
   const router = useRouter();
-  const [disciplines, setDisciplines] = useState<ProfessorDisciplineSummary[]>([]);
+  const { user } = useAuth();
+  const isAdmin = user?.perfil === "admin";
+  const [disciplines, setDisciplines] = useState<EditableDisciplineSummary[]>([]);
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<number | null>(null);
   const [selectedGrades, setSelectedGrades] = useState<ProfessorGradeItem[]>([]);
   const [search, setSearch] = useState("");
@@ -62,11 +66,20 @@ export const GradeEditorScreen = () => {
       setError("");
 
       try {
-        const response = await getProfessorDisciplines();
-        setDisciplines(response.disciplinas);
+        if (isAdmin) {
+          const response = await getAllDisciplines();
+          setDisciplines(response);
 
-        if (response.disciplinas.length > 0) {
-          setSelectedDisciplineId((current) => current ?? response.disciplinas[0].id);
+          if (response.length > 0) {
+            setSelectedDisciplineId((current) => current ?? response[0].id);
+          }
+        } else {
+          const response = await getProfessorDisciplines();
+          setDisciplines(response.disciplinas);
+
+          if (response.disciplinas.length > 0) {
+            setSelectedDisciplineId((current) => current ?? response.disciplinas[0].id);
+          }
         }
       } catch (requestError) {
         setError(
@@ -80,7 +93,7 @@ export const GradeEditorScreen = () => {
     };
 
     loadDisciplines().catch(() => undefined);
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedDisciplineId) {
@@ -95,7 +108,7 @@ export const GradeEditorScreen = () => {
       setEditingId(null);
 
       try {
-        const response = await getProfessorDisciplineGrades(selectedDisciplineId);
+        const response = await getDisciplineGrades(selectedDisciplineId);
         setSelectedGrades(response.alunos);
         setDrafts(
           response.alunos.reduce<Record<number, DraftState>>((acc, grade) => {
@@ -213,15 +226,17 @@ export const GradeEditorScreen = () => {
     <ScreenContainer>
       <View style={styles.hero}>
         <View style={styles.heroTop}>
-          <Button title="Voltar" variant="secondary" onPress={() => router.back()} />
+
           <View style={styles.heroBadge}>
-            <MaterialIcons name="edit" size={16} color={palette.primary} />
-            <Text style={styles.heroBadgeText}>Professor</Text>
+            <MaterialIcons name="edit" size={16} color={palette.background} />
+            <Text style={styles.heroBadgeText}>{isAdmin ? "Admin" : "Professor"}</Text>
           </View>
         </View>
         <Text style={styles.title}>Grade Editor</Text>
         <Text style={styles.subtitle}>
-          Selecione a disciplina, revise as notas e salve no banco.
+          {isAdmin
+            ? "Selecione a disciplina e revise as notas de qualquer turma."
+            : "Selecione a disciplina, revise as notas e salve no banco."}
         </Text>
       </View>
 
@@ -246,7 +261,11 @@ export const GradeEditorScreen = () => {
             <Text style={styles.helperText}>Carregando disciplinas...</Text>
           </View>
         ) : disciplines.length === 0 ? (
-          <Text style={styles.helperText}>Nenhuma disciplina vinculada ao professor.</Text>
+          <Text style={styles.helperText}>
+            {isAdmin
+              ? "Nenhuma disciplina cadastrada."
+              : "Nenhuma disciplina vinculada ao professor."}
+          </Text>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.disciplineRow}>
@@ -278,6 +297,16 @@ export const GradeEditorScreen = () => {
                     >
                       {discipline.curso.nome} - {discipline.semestre}o semestre
                     </Text>
+                    {isAdmin && discipline.professor ? (
+                      <Text
+                        style={[
+                          styles.disciplineChipMeta,
+                          isSelected && styles.disciplineChipMetaSelected,
+                        ]}
+                      >
+                        Professor: {discipline.professor.nome}
+                      </Text>
+                    ) : null}
                   </Pressable>
                 );
               })}
@@ -292,6 +321,11 @@ export const GradeEditorScreen = () => {
           <Text style={styles.helperText}>
             Curso: {selectedDiscipline.curso.nome} | Semestre: {selectedDiscipline.semestre}
           </Text>
+          {isAdmin && selectedDiscipline.professor ? (
+            <Text style={styles.helperText}>
+              Professor: {selectedDiscipline.professor.nome}
+            </Text>
+          ) : null}
           <TextInput
             label="Buscar aluno"
             value={search}

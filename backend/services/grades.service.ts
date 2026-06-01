@@ -100,17 +100,19 @@ export const listProfessorDisciplines = async (userId: number) => {
 export const getProfessorDisciplineGrades = async (
   userId: number,
   disciplinaId: number,
+  perfil: Perfil,
 ) => {
-  const professor = await getProfessorByUserId(userId);
+  const professor =
+    perfil === "PROFESSOR" ? await getProfessorByUserId(userId) : null;
 
-  if (!professor) {
+  if (perfil === "PROFESSOR" && !professor) {
     throw new AppError("Professor não encontrado para o usuário autenticado.", 403);
   }
 
   const disciplina = await prisma.disciplina.findFirst({
     where: {
       id: disciplinaId,
-      professorId: professor.id,
+      ...(professor ? { professorId: professor.id } : {}),
     },
     include: {
       curso: { select: { id: true, nome: true } },
