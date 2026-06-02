@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const IP_DA_MAQUINA = process.env.IP || "10.68.55.62";
+const IP_DA_MAQUINA = process.env.IP || "192.168.96.65";
 
 const api = axios.create({
   // Já deixamos o /api no final para você não precisar repetir nas telas

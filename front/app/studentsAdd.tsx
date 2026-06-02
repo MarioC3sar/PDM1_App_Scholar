@@ -11,7 +11,7 @@ import { useForm } from "@/hooks/use-form";
 import { StudentFormData } from "@/types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -20,6 +20,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TextInput as RNTextInput,
+  Platform,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 
 const initialValues: StudentFormData = {
@@ -76,19 +81,30 @@ export default function StudentsScreen() {
   const [feedback, setFeedback] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
 
+  // ── Refs para os TextInputs ──
+  const matriculaRef = useRef<RNTextInput>(null);
+  const emailRef = useRef<RNTextInput>(null);
+  const telefoneRef = useRef<RNTextInput>(null);
+  const cepRef = useRef<RNTextInput>(null);
+  const logradouroRef = useRef<RNTextInput>(null);
+  const numeroRef = useRef<RNTextInput>(null);
+  const bairroRef = useRef<RNTextInput>(null);
+  const cidadeRef = useRef<RNTextInput>(null);
+  const estadoRef = useRef<RNTextInput>(null);
+
   const { values, errors, loading, handleChange, handleSubmit, reset } =
-    useForm(
-      initialValues,
-      async (formValues) => {
-        setFeedback("");
-        const result = await addStudent(formValues);
-        setFeedback(
-          `Aluno cadastrado com sucesso. E-mail institucional: ${result.emailInstitucional}. Senha temporaria: ${result.senhaTemporaria}`,
-        );
-        reset();
-      },
-      validate,
-    );
+      useForm(
+          initialValues,
+          async (formValues) => {
+            setFeedback("");
+            const result = await addStudent(formValues);
+            setFeedback(
+                `Aluno cadastrado com sucesso. E-mail institucional: ${result.emailInstitucional}. Senha temporaria: ${result.senhaTemporaria}`,
+            );
+            reset();
+          },
+          validate,
+      );
 
   useEffect(() => {
     loadStates().catch(() => undefined);
@@ -101,250 +117,323 @@ export default function StudentsScreen() {
   }, [loadCitiesByState, values.estado]);
 
   const handleCepLookup = async () => {
+    // Se o CEP estiver vazio, só pula para o próximo campo
+    if (!values.cep) {
+      logradouroRef.current?.focus();
+      return;
+    }
+
     setCepLoading(true);
     try {
       const address = await searchAddressByCep(values.cep);
       if (
-        !address.logradouro &&
-        !address.cidade &&
-        !address.estado &&
-        !address.bairro
+          !address.logradouro &&
+          !address.cidade &&
+          !address.estado &&
+          !address.bairro
       ) {
-        setFeedback("CEP nao localizado. Preencha manualmente.");
+        setFeedback("CEP não localizado. Preencha manualmente.");
+        logradouroRef.current?.focus(); // Vai para Logradouro preencher manual
         return;
       }
+
       if (address.logradouro) handleChange("logradouro", address.logradouro);
       if (address.bairro) handleChange("bairro", address.bairro);
       if (address.cidade) handleChange("cidade", address.cidade);
       if (address.estado) handleChange("estado", address.estado);
+
       setFeedback("Endereço preenchido com sucesso.");
+
+      // Se a busca retornou a rua, o foco pula o logradouro e vai direto pro Número
+      if (address.logradouro) {
+        numeroRef.current?.focus();
+      } else {
+        // Caso seja um CEP geral (só cidade/estado), foca no Logradouro
+        logradouroRef.current?.focus();
+      }
+    } catch (error) {
+      // Se der erro na API, apenas segue para o logradouro
+      logradouroRef.current?.focus();
     } finally {
       setCepLoading(false);
     }
   };
 
   return (
-    <ScreenContainer>
-      {/* ── Hero ── */}
-      <View style={styles.hero}>
-        <View style={styles.glowOne} />
-        <View style={styles.glowTwo} />
-
-        <View style={styles.heroTop}>
-          <View style={styles.heroBrand}>
-            <MaterialIcons
-              name="school"
-              size={16}
-              color="rgba(255,255,255,0.9)"
-            />
-            <Text style={styles.heroBrandText}>Gestão de Alunos</Text>
-          </View>
-        </View>
-
-        <Text style={styles.heroSubtitle}>
-          Preencha os dados pessoais e de endereço para cadastrar um novo aluno.
-        </Text>
-      </View>
-
-      {/* ── Dados Pessoais ── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Dados Pessoais</Text>
-      </View>
-
-      <Card variant="elevated" style={styles.formCard}>
-        <ErrorMessage message={feedback} visible={!!feedback} />
-        <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
-
-        <TextInput
-          label="Nome Completo"
-          placeholder="Ex: João da Silva"
-          value={values.nome}
-          onChangeText={(text) => handleChange("nome", text)}
-          error={errors.nome}
-          returnKeyType="next"
-          required
-        />
-        <TextInput
-          label="Matrícula"
-          placeholder="Ex: 2024001234"
-          value={values.matricula}
-          onChangeText={(text) => handleChange("matricula", text)}
-          error={errors.matricula}
-          required
-        />
-        <TextInput
-          label="E-mail pessoal"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          placeholder="exemplo@email.com"
-          value={values.email}
-          onChangeText={(text) => handleChange("email", text)}
-          error={errors.email}
-          required
-        />
-        <View style={styles.courseListBox}>
-          <Text style={styles.courseLabel}>Curso</Text>
-          {loadingCourses ? (
-            <View style={styles.loadingColunm}>
-              <ActivityIndicator size="small" color={palette.primary} />
-              <Text style={styles.helperText}>Carregando cursos...</Text>
-            </View>
-          ) : availableCourses.length === 0 ? (
-            <Text style={styles.helperText}>
-              Nenhum curso cadastrado no banco.
-            </Text>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.courseRow}>
-                {availableCourses.map((course) => {
-                  const isSelected = values.curso === course.nome;
-
-                  return (
-                    <Pressable
-                      key={course.id}
-                      onPress={() => handleChange("curso", course.nome)}
-                      style={[
-                        styles.courseChip,
-                        isSelected && styles.courseChipSelected,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.courseChipText,
-                          isSelected && styles.courseChipTextSelected,
-                        ]}
-                      >
-                        {course.nome}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </ScrollView>
-          )}
-          {errors.curso ? (
-            <Text style={styles.errorText}>{errors.curso}</Text>
-          ) : null}
-          {values.curso ? (
-            <Text style={styles.selectedCourseText}>
-              Selecionado: {values.curso}
-            </Text>
-          ) : null}
-        </View>
-        <TextInput
-          label="Telefone"
-          keyboardType="phone-pad"
-          placeholder="(11) 99999-9999"
-          value={values.telefone}
-          onChangeText={(text) => handleChange("telefone", text)}
-          error={errors.telefone}
-          required
-        />
-      </Card>
-
-      {/* ── Endereço ── */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Endereço</Text>
-      </View>
-
-      <Card variant="elevated" style={styles.formCard}>
-        <View style={styles.inlineAction}>
-          <View style={styles.inlineField}>
-            <TextInput
-              label="CEP"
-              keyboardType="numeric"
-              placeholder="00000-000"
-              value={values.cep}
-              onChangeText={(text) => handleChange("cep", text)}
-              error={errors.cep}
-              required
-            />
-          </View>
-          <View style={styles.inlineButton}>
-            {cepLoading ? (
-              <ActivityIndicator
-                size="small"
-                color={palette.primary}
-                style={{ paddingVertical: 14 }}
-              />
-            ) : (
-              <Button
-                title="Buscar"
-                variant="secondary"
-                onPress={handleCepLookup}
-              />
-            )}
-          </View>
-        </View>
-
-        <TextInput
-          label="Logradouro"
-          placeholder="Rua, número, complemento"
-          value={values.logradouro}
-          onChangeText={(text) => handleChange("logradouro", text)}
-          error={errors.logradouro}
-          required
-        />
-
-        <View style={styles.row}>
-          <View style={{ flex: 1 }}>
-            <TextInput
-              label="Número"
-              value={values.numero}
-              onChangeText={(text) => handleChange("numero", text)}
-              error={errors.numero}
-              required
-            />
-          </View>
-          <View style={{ flex: 2 }}>
-            <TextInput
-              label="Bairro"
-              value={values.bairro}
-              onChangeText={(text) => handleChange("bairro", text)}
-              error={errors.bairro}
-              required
-            />
-          </View>
-        </View>
-
-        <TextInput
-          label={`Cidade${loadingCities ? " (carregando...)" : ""}`}
-          value={values.cidade}
-          onChangeText={(text) => handleChange("cidade", text)}
-          error={errors.cidade}
-          placeholder={cities.slice(0, 3).join(", ")}
-          required
-        />
-        <TextInput
-          label={`Estado${loadingStates ? " (carregando...)" : ""}`}
-          value={values.estado}
-          onChangeText={(text) => handleChange("estado", text.toUpperCase())}
-          error={errors.estado}
-          placeholder={states.slice(0, 5).join(", ")}
-          required
-        />
-      </Card>
-
-      {/* ── Submit ── */}
-      <View style={styles.submitArea}>
-        <Button
-          title={loading ? "Salvando..." : "Cadastrar Aluno"}
-          loading={loading}
-          onPress={handleSubmit}
-        />
-      </View>
-
-      {/* ── Link to list ── */}
-      <TouchableOpacity
-        style={styles.listLink}
-        onPress={() => router.push("/studentsList")}
-        activeOpacity={0.75}
+      <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: palette.background }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       >
-        <Text style={styles.listLinkText}>Ver alunos cadastrados →</Text>
-      </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {/* Usando uma View genérica para envolver caso precise do dismiss,
+            mas note que se ScreenContainer tiver um ScrollView, o TouchableWithoutFeedback pode bloquear a rolagem. */}
+          <View style={{ flex: 1 }}>
+            <ScreenContainer>
+              {/* ── Hero ── */}
+              <View style={styles.hero}>
+                <View style={styles.glowOne} />
+                <View style={styles.glowTwo} />
 
-      <View style={{ height: 32 }} />
-    </ScreenContainer>
+                <View style={styles.heroTop}>
+                  <View style={styles.heroBrand}>
+                    <MaterialIcons
+                        name="school"
+                        size={16}
+                        color="rgba(255,255,255,0.9)"
+                    />
+                    <Text style={styles.heroBrandText}>Gestão de Alunos</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.heroSubtitle}>
+                  Preencha os dados pessoais e de endereço para cadastrar um novo aluno.
+                </Text>
+              </View>
+
+              {/* ── Dados Pessoais ── */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Dados Pessoais</Text>
+              </View>
+
+              <Card variant="elevated" style={styles.formCard}>
+                <ErrorMessage message={feedback} visible={!!feedback} />
+                <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
+
+                <TextInput
+                    label="Nome Completo"
+                    placeholder="Ex: João da Silva"
+                    value={values.nome}
+                    onChangeText={(text) => handleChange("nome", text)}
+                    error={errors.nome}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => matriculaRef.current?.focus()}
+                    required
+                />
+                <TextInput
+                    ref={matriculaRef}
+                    label="Matrícula"
+                    placeholder="Ex: 2024001234"
+                    value={values.matricula}
+                    onChangeText={(text) => handleChange("matricula", text)}
+                    error={errors.matricula}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => emailRef.current?.focus()}
+                    required
+                />
+                <TextInput
+                    ref={emailRef}
+                    label="E-mail pessoal"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholder="exemplo@email.com"
+                    value={values.email}
+                    onChangeText={(text) => handleChange("email", text)}
+                    error={errors.email}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => telefoneRef.current?.focus()}
+                    required
+                />
+
+                <View style={styles.courseListBox}>
+                  <Text style={styles.courseLabel}>Curso</Text>
+                  {loadingCourses ? (
+                      <View style={styles.loadingColunm}>
+                        <ActivityIndicator size="small" color={palette.primary} />
+                        <Text style={styles.helperText}>Carregando cursos...</Text>
+                      </View>
+                  ) : availableCourses.length === 0 ? (
+                      <Text style={styles.helperText}>
+                        Nenhum curso cadastrado no banco.
+                      </Text>
+                  ) : (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={styles.courseRow}>
+                          {availableCourses.map((course) => {
+                            const isSelected = values.curso === course.nome;
+
+                            return (
+                                <Pressable
+                                    key={course.id}
+                                    onPress={() => handleChange("curso", course.nome)}
+                                    style={[
+                                      styles.courseChip,
+                                      isSelected && styles.courseChipSelected,
+                                    ]}
+                                >
+                                  <Text
+                                      style={[
+                                        styles.courseChipText,
+                                        isSelected && styles.courseChipTextSelected,
+                                      ]}
+                                  >
+                                    {course.nome}
+                                  </Text>
+                                </Pressable>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                  )}
+                  {errors.curso ? (
+                      <Text style={styles.errorText}>{errors.curso}</Text>
+                  ) : null}
+                  {values.curso ? (
+                      <Text style={styles.selectedCourseText}>
+                        Selecionado: {values.curso}
+                      </Text>
+                  ) : null}
+                </View>
+
+                <TextInput
+                    ref={telefoneRef}
+                    label="Telefone"
+                    keyboardType="phone-pad"
+                    placeholder="(11) 99999-9999"
+                    value={values.telefone}
+                    onChangeText={(text) => handleChange("telefone", text)}
+                    error={errors.telefone}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => cepRef.current?.focus()}
+                    required
+                />
+              </Card>
+
+              {/* ── Endereço ── */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Endereço</Text>
+              </View>
+
+              <Card variant="elevated" style={styles.formCard}>
+                <View style={styles.inlineAction}>
+                  <View style={styles.inlineField}>
+                    <TextInput
+                        ref={cepRef}
+                        label="CEP"
+                        keyboardType="numeric"
+                        placeholder="00000-000"
+                        value={values.cep}
+                        onChangeText={(text) => handleChange("cep", text)}
+                        error={errors.cep}
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        // ↓ AQUI ESTÁ A MUDANÇA ↓
+                        onSubmitEditing={() => handleCepLookup()}
+                        required
+                    />
+                  </View>
+                  <View style={styles.inlineButton}>
+                    {cepLoading ? (
+                        <ActivityIndicator
+                            size="small"
+                            color={palette.primary}
+                            style={{ paddingVertical: 14 }}
+                        />
+                    ) : (
+                        <Button
+                            title="Buscar"
+                            variant="secondary"
+                            onPress={handleCepLookup}
+                        />
+                    )}
+                  </View>
+                </View>
+
+                <TextInput
+                    ref={logradouroRef}
+                    label="Logradouro"
+                    placeholder="Rua, número, complemento"
+                    value={values.logradouro}
+                    onChangeText={(text) => handleChange("logradouro", text)}
+                    error={errors.logradouro}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => numeroRef.current?.focus()}
+                    required
+                />
+
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <TextInput
+                        ref={numeroRef}
+                        label="Número"
+                        value={values.numero}
+                        onChangeText={(text) => handleChange("numero", text)}
+                        error={errors.numero}
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => bairroRef.current?.focus()}
+                        required
+                    />
+                  </View>
+                  <View style={{ flex: 2 }}>
+                    <TextInput
+                        ref={bairroRef}
+                        label="Bairro"
+                        value={values.bairro}
+                        onChangeText={(text) => handleChange("bairro", text)}
+                        error={errors.bairro}
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => cidadeRef.current?.focus()}
+                        required
+                    />
+                  </View>
+                </View>
+
+                <TextInput
+                    ref={cidadeRef}
+                    label={`Cidade${loadingCities ? " (carregando...)" : ""}`}
+                    value={values.cidade}
+                    onChangeText={(text) => handleChange("cidade", text)}
+                    error={errors.cidade}
+                    placeholder={cities.slice(0, 3).join(", ")}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => estadoRef.current?.focus()}
+                    required
+                />
+
+                <TextInput
+                    ref={estadoRef}
+                    label={`Estado${loadingStates ? " (carregando...)" : ""}`}
+                    value={values.estado}
+                    onChangeText={(text) => handleChange("estado", text.toUpperCase())}
+                    error={errors.estado}
+                    placeholder={states.slice(0, 5).join(", ")}
+                    returnKeyType="send"
+                    onSubmitEditing={handleSubmit}
+                    required
+                />
+              </Card>
+
+              {/* ── Submit ── */}
+              <View style={styles.submitArea}>
+                <Button
+                    title={loading ? "Salvando..." : "Cadastrar Aluno"}
+                    loading={loading}
+                    onPress={handleSubmit}
+                />
+              </View>
+
+              {/* ── Link to list ── */}
+              <TouchableOpacity
+                  style={styles.listLink}
+                  onPress={() => router.push("/studentsList")}
+                  activeOpacity={0.75}
+              >
+                <Text style={styles.listLinkText}>Ver alunos cadastrados →</Text>
+              </TouchableOpacity>
+
+              <View style={{ height: 32 }} />
+            </ScreenContainer>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
   );
 }
 

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -9,6 +9,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   TextInput as RNTextInput,
+  TouchableOpacity,
 } from "react-native";
 import { Redirect } from "expo-router";
 import { Button, ErrorMessage, TextInput } from "@/components/ui";
@@ -32,6 +33,8 @@ const validate = (values: LoginCredentials) => {
 export default function LoginScreen() {
   const { login, isAuthenticated, user } = useAuth();
   const passwordInputRef = useRef<RNTextInput>(null);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const { values, errors, loading, handleChange, handleSubmit } = useForm(
       initialValues,
@@ -67,13 +70,11 @@ export default function LoginScreen() {
                 />
               </View>
 
-
               <Text style={styles.heroSubtitle}>Sistema de Gestão Acadêmica</Text>
             </View>
 
             {/* ── Form card ── */}
             <View style={styles.formCard}>
-
 
               <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
@@ -84,6 +85,7 @@ export default function LoginScreen() {
                   value={values.login}
                   autoCorrect={false}
                   returnKeyType="next"
+                  blurOnSubmit={false} // <-- Evita que o teclado feche ao passar para o próximo campo
                   onSubmitEditing={() => passwordInputRef.current?.focus()}
                   onChangeText={(text) => handleChange("login", text)}
                   error={errors.login}
@@ -94,23 +96,32 @@ export default function LoginScreen() {
                   ref={passwordInputRef}
                   label="Senha"
                   placeholder="••••••••"
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   value={values.password}
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="go"
-                  onSubmitEditing={handleSubmit}
+                  onSubmitEditing={handleSubmit} // <-- Submete o formulário direto pelo teclado
                   onChangeText={(text) => handleChange("password", text)}
                   error={errors.password}
                   required
               />
+
+              {/* Botão de Mostrar/Ocultar Senha */}
+              <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.showPasswordButton}
+              >
+                <Text style={styles.showPasswordText}>
+                  {showPassword ? "Ocultar senha" : "Mostrar senha"}
+                </Text>
+              </TouchableOpacity>
 
               <Button
                   title={loading ? "Entrando..." : "Entrar"}
                   loading={loading}
                   onPress={handleSubmit}
               />
-
 
             </View>
 
@@ -240,5 +251,15 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
     fontWeight: "500",
     letterSpacing: 0.3,
+  },
+  showPasswordButton: {
+    alignSelf: "flex-end", // Alinha à direita
+    marginTop: -10,        // Ajuste esse valor dependendo da margem interna do seu componente TextInput
+    marginBottom: 20,
+  },
+  showPasswordText: {
+    fontSize: 13,
+    color: palette.primary,
+    fontWeight: "600",
   },
 });
