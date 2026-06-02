@@ -18,6 +18,16 @@ export const createStudentAccountSchema = z
   })
   .strict();
 
+export const createTeacherAccountSchema = z
+  .object({
+    nome: z.string().min(3, "O nome deve ter no minimo 3 caracteres."),
+    titulacao: z.string().min(2, "A titulacao deve ter no minimo 2 caracteres."),
+    area: z.string().min(2, "A area deve ter no minimo 2 caracteres."),
+    tempoDocencia: z.string().optional(),
+    email: z.string().email("O e-mail pessoal deve ser valido."),
+  })
+  .strict();
+
 export const firstAccessPasswordSchema = z.object({
   novaSenha: z
     .string()

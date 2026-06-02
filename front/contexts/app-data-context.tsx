@@ -60,6 +60,7 @@ export const AcademicProvider: React.FC<ProviderProps> = ({ children }) => {
   const addTeacher = useCallback(async (teacher: TeacherFormData) => {
     const result = await createTeacherOnApi(teacher);
     setTeachers((prev) => [result.teacher, ...prev]);
+    return result;
   }, []);
 
   const addCourse = useCallback(async (course: CourseFormData) => {

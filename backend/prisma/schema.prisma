@@ -84,6 +84,7 @@ model Professor {
   titulacao     String
   area          String
   tempoDocencia String? @map("tempo_docencia")
+  emailPessoal  String? @map("email_pessoal")
 
   // Vínculo obrigatório com Usuário (Login)
   usuarioId Int     @unique @map("usuario_id")

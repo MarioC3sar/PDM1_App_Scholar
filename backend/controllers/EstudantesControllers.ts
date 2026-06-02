@@ -42,14 +42,17 @@ export const getStudents = async (_req: Request, res: Response) => {
 
     const alunosFormatados = alunos.map((aluno) => ({
       ...aluno,
-      emailPessoal: aluno.emailPessoal ?? "",
+
       email: aluno.usuario.email,
       emailInstitucional: aluno.usuario.email,
       primeiroAcesso: aluno.usuario.primeiroAcesso,
       curso: aluno.curso.nome,
     }));
 
-    return res.json({ total: alunosFormatados.length, alunos: alunosFormatados });
+    return res.json({
+      total: alunosFormatados.length,
+      alunos: alunosFormatados,
+    });
   } catch (error) {
     console.error("Erro ao buscar alunos:", error);
     return res.status(500).json({ message: "Erro interno do servidor." });

@@ -4,7 +4,7 @@ import { useAcademicData } from "@/hooks/use-academic-data";
 import { useForm } from "@/hooks/use-form";
 import { TeacherFormData } from "@/types";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -27,13 +27,17 @@ const validate = (values: TeacherFormData) => {
 export default function TeachersScreen() {
   const router = useRouter();
   const { addTeacher } = useAcademicData();
+  const [feedback, setFeedback] = useState("");
 
   const { values, errors, loading, handleChange, handleSubmit, reset } = useForm(
       initialValues,
       async (formValues) => {
-        await addTeacher(formValues);
+        setFeedback("");
+        const result = await addTeacher(formValues);
+        setFeedback(
+          `Professor cadastrado com sucesso. E-mail institucional: ${result.emailAccess}. Senha temporária: ${result.temporaryPassword}`,
+        );
         reset();
-        router.push("/teachersList");
       },
       validate,
   );
@@ -63,7 +67,18 @@ export default function TeachersScreen() {
         </View>
 
         <View style={styles.formCard}>
-          <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
+          <View style={[styles.successCard, !!feedback ? styles.successCardVisible : null]}>
+            <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
+            {feedback ? (
+              <>
+                <View style={styles.successHeader}>
+                  <MaterialIcons name="check-circle" size={18} color="#166534" />
+                  <Text style={styles.successTitle}>Professor cadastrado</Text>
+                </View>
+                <Text style={styles.successText}>{feedback}</Text>
+              </>
+            ) : null}
+          </View>
 
           <TextInput
               label="Nome"
@@ -94,7 +109,7 @@ export default function TeachersScreen() {
               required
           />
           <TextInput
-              label="Email"
+              label="Email pessoal"
               autoCapitalize="none"
               keyboardType="email-address"
               value={values.email}
@@ -217,6 +232,36 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 2,
+  },
+
+  successCard: {
+    display: "none",
+  },
+  successCardVisible: {
+    display: "flex",
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "#ECFDF3",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+  },
+  successHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  successTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#166534",
+  },
+  successText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#14532D",
+    fontWeight: "500",
   },
 
   // List link

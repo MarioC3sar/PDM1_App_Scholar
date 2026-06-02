@@ -11,6 +11,7 @@ type CreateTeacherResponse = {
     area: string;
     tempoDocencia?: string | null;
   };
+  email_pessoal: string | null;
   email_acesso: string;
   senha_temporaria: string;
 };
@@ -52,7 +53,7 @@ export const getTeachersFromApi = async (): Promise<Teacher[]> => {
 
     throw error instanceof Error
       ? error
-      : new Error("Falha ao buscar professores.");
+      : new Error();
   }
 };
 
@@ -60,6 +61,7 @@ export const createTeacherOnApi = async (
   teacher: TeacherFormData,
 ): Promise<{
   teacher: Teacher;
+  emailPersonal: string | null;
   emailAccess: string;
   temporaryPassword: string;
 }> => {
@@ -81,6 +83,7 @@ export const createTeacherOnApi = async (
         tempoDocencia: response.data.professor.tempoDocencia ?? "",
         email: response.data.email_acesso,
       },
+      emailPersonal: response.data.email_pessoal,
       emailAccess: response.data.email_acesso,
       temporaryPassword: response.data.senha_temporaria,
     };

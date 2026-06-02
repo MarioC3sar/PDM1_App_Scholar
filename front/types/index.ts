@@ -68,6 +68,13 @@ export interface TeacherFormData {
   email: string;
 }
 
+export interface TeacherAccountResult {
+  teacher: Teacher;
+  emailPersonal: string | null;
+  emailAccess: string;
+  temporaryPassword: string;
+}
+
 export interface Course {
   id: string;
   nome: string;
@@ -124,7 +131,7 @@ export interface AcademicContextType {
   loadingStudents: boolean;
   loadingTeachers: boolean;
   addStudent: (student: StudentFormData) => Promise<StudentAccountResult>;
-  addTeacher: (teacher: TeacherFormData) => Promise<void>;
+  addTeacher: (teacher: TeacherFormData) => Promise<TeacherAccountResult>;
   addCourse: (course: CourseFormData) => Promise<void>;
   updateGrade: (gradeId: string, updates: Pick<GradeEntry, "nota1" | "nota2">) => Promise<void>;
   searchAddressByCep: (cep: string) => Promise<Partial<StudentFormData>>;

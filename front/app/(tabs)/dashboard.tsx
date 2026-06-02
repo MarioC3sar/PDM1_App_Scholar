@@ -77,6 +77,7 @@ const quickAccess: {
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const isAdmin = user?.perfil === "admin";
   const [studentCount, setStudentCount] = useState<number | null>(null);
   const [teacherCount, setTeacherCount] = useState<number | null>(null);
   const [disciplineCount, setDisciplineCount] = useState<number | null>(null);
@@ -84,6 +85,11 @@ export default function DashboardScreen() {
   const [statsError, setStatsError] = useState("");
 
   useEffect(() => {
+    if (!isAdmin) {
+      setLoadingStats(false);
+      return;
+    }
+
     let mounted = true;
 
     const hydrateStats = async () => {
@@ -122,7 +128,7 @@ export default function DashboardScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isAdmin]);
 
   const visibleModules = modules.filter((m) =>
       user ? m.roles.includes(user.perfil) : false,
@@ -131,24 +137,30 @@ export default function DashboardScreen() {
       user ? q.roles.includes(user.perfil) : false,
   );
 
-  const stats = [
-    {
-      label: "Alunos",
-      value: loadingStats ? "..." : studentCount ?? 0,
-      icon: "school" as keyof typeof MaterialIcons.glyphMap,
-    },
-    {
-      label: "Professores",
-      value: loadingStats ? "..." : teacherCount ?? 0,
-      icon: "person" as keyof typeof MaterialIcons.glyphMap,
-    },
-    {
-      label: "Disciplinas",
-      value: loadingStats ? "..." : disciplineCount ?? 0,
-      icon: "menu-book" as keyof typeof MaterialIcons.glyphMap,
-    },
-    { label: "Aprovação", value: "85%", icon: "trending-up" as keyof typeof MaterialIcons.glyphMap },
-  ];
+  const stats = isAdmin
+    ? [
+        {
+          label: "Alunos",
+          value: loadingStats ? "..." : studentCount ?? 0,
+          icon: "school" as keyof typeof MaterialIcons.glyphMap,
+        },
+        {
+          label: "Professores",
+          value: loadingStats ? "..." : teacherCount ?? 0,
+          icon: "person" as keyof typeof MaterialIcons.glyphMap,
+        },
+        {
+          label: "Disciplinas",
+          value: loadingStats ? "..." : disciplineCount ?? 0,
+          icon: "menu-book" as keyof typeof MaterialIcons.glyphMap,
+        },
+        {
+          label: "Aprovação",
+          value: "85%",
+          icon: "trending-up" as keyof typeof MaterialIcons.glyphMap,
+        },
+      ]
+    : [];
 
   return (
       <ScrollView
@@ -184,17 +196,19 @@ export default function DashboardScreen() {
         ) : null}
 
         {/* ── Stats card (overlapping hero) ── */}
-        <View style={styles.statsCard}>
-          {stats.map((s) => (
-              <View key={s.label} style={styles.statItem}>
-                <View style={styles.statIcon}>
-                  <MaterialIcons name={s.icon} size={18} color={palette.primary} />
+        {isAdmin && (
+          <View style={styles.statsCard}>
+            {stats.map((s) => (
+                <View key={s.label} style={styles.statItem}>
+                  <View style={styles.statIcon}>
+                    <MaterialIcons name={s.icon} size={18} color={palette.primary} />
+                  </View>
+                  <Text style={styles.statValue}>{s.value}</Text>
+                  <Text style={styles.statLabel}>{s.label}</Text>
                 </View>
-                <Text style={styles.statValue}>{s.value}</Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
-              </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
 
         {/* ── Modules grid ── */}
         {visibleModules.length > 0 && (
@@ -422,7 +436,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: palette.text,
+    color: palette.background,
     marginBottom: 12,
     paddingHorizontal: 18,
   },

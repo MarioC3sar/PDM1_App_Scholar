@@ -2,11 +2,11 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import prisma from "../prismaClient";
-import { createStudentAccountSchema } from "../schemas/zodController";
+import { createTeacherAccountSchema } from "../schemas/zodController";
 
 const INSTITUTIONAL_EMAIL_DOMAIN =
-  process.env.INSTITUTIONAL_EMAIL_DOMAIN ?? "aluno.scholar.edu.br";
-const TEMPORARY_PASSWORD = process.env.TEMP_STUDENT_PASSWORD ?? "Aluno@2026";
+  process.env.INSTITUTIONAL_EMAIL_DOMAIN ?? "professor.scholar.edu.br";
+const TEMPORARY_PASSWORD = process.env.TEMP_TEACHER_PASSWORD ?? "Professor@2026";
 
 const removeAccents = (value: string) =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -23,8 +23,8 @@ const buildEmailBase = (nome: string) => {
     .map(sanitizeNamePart)
     .filter(Boolean);
 
-  const firstName = parts[0] ?? "aluno";
-  const lastName = parts.length > 1 ? parts[parts.length - 1] : "aluno";
+  const firstName = parts[0] ?? "professor";
+  const lastName = parts.length > 1 ? parts[parts.length - 1] : "professor";
 
   return `${firstName}.${lastName}`;
 };
@@ -52,35 +52,29 @@ const buildUniqueInstitutionalEmail = async (
   }
 };
 
-export type CreateStudentAccountInput = z.infer<typeof createStudentAccountSchema>;
+export type CreateTeacherAccountInput = z.infer<typeof createTeacherAccountSchema>;
 
-export type CreateStudentAccountResult = {
+export type CreateTeacherAccountResult = {
   usuario: {
     id: number;
     email: string;
     primeiroAcesso: boolean;
   };
-  aluno: {
+  professor: {
     id: number;
     nome: string;
-    matricula: string;
+    titulacao: string;
+    area: string;
+    tempoDocencia: string | null;
     emailPessoal: string | null;
-    telefone: string | null;
-    cep: string | null;
-    logradouro: string | null;
-    numero: string | null;
-    bairro: string | null;
-    cidade: string | null;
-    estado: string | null;
-    cursoId: number;
   };
   senhaTemporaria: string;
 };
 
-export const createStudentAccount = async (
-  input: CreateStudentAccountInput,
-): Promise<CreateStudentAccountResult> => {
-  const data = createStudentAccountSchema.parse(input);
+export const createTeacherAccount = async (
+  input: CreateTeacherAccountInput,
+): Promise<CreateTeacherAccountResult> => {
+  const data = createTeacherAccountSchema.parse(input);
 
   return prisma.$transaction(async (tx) => {
     const email = await buildUniqueInstitutionalEmail(tx, data.nome);
@@ -90,7 +84,7 @@ export const createStudentAccount = async (
       data: {
         email,
         senhaHash,
-        perfil: "ALUNO",
+        perfil: "PROFESSOR",
         primeiroAcesso: true,
       },
       select: {
@@ -100,40 +94,28 @@ export const createStudentAccount = async (
       },
     });
 
-    const aluno = await tx.aluno.create({
+    const professor = await tx.professor.create({
       data: {
         nome: data.nome,
-        matricula: data.matricula,
+        titulacao: data.titulacao,
+        area: data.area,
+        tempoDocencia: data.tempoDocencia ?? null,
         emailPessoal: data.email,
-        cursoId: data.cursoId,
         usuarioId: usuario.id,
-        telefone: data.telefone ?? null,
-        cep: data.cep ?? null,
-        logradouro: data.logradouro ?? null,
-        numero: data.numero ?? null,
-        bairro: data.bairro ?? null,
-        cidade: data.cidade ?? null,
-        estado: data.estado ?? null,
       },
       select: {
         id: true,
         nome: true,
-        matricula: true,
+        titulacao: true,
+        area: true,
+        tempoDocencia: true,
         emailPessoal: true,
-        telefone: true,
-        cep: true,
-        logradouro: true,
-        numero: true,
-        bairro: true,
-        cidade: true,
-        estado: true,
-        cursoId: true,
       },
     });
 
     return {
       usuario,
-      aluno,
+      professor,
       senhaTemporaria: TEMPORARY_PASSWORD,
     };
   });
