@@ -23,7 +23,16 @@ async function main() {
                 },
             },
         },
+        include: {
+            professor: true,
+        },
     });
+
+    if (!profUser.professor) {
+        throw new Error('Professor nao foi criado junto com o usuario.');
+    }
+
+    const professorId = profUser.professor.id;
 
     console.log('Professor  criado!');
 
@@ -57,13 +66,21 @@ async function main() {
 
     console.log('Cursos criados!');
 
+    await prisma.disciplina.deleteMany({
+        where: {
+            cursoId: {
+                in: [dsm.id, meioAmbiente.id, geo.id],
+            },
+        },
+    });
+
     // 3. Criar as Disciplinas de DSM (com matérias até o 4º semestre)
     await prisma.disciplina.createMany({
         data: [
-            { nome: 'Desenvolvimento Web III', cargaHoraria: 80, semestre: '4', cursoId: dsm.id, professorId: profUser.id },
-            { nome: 'Engenharia de Software II', cargaHoraria: 80, semestre: '4', cursoId: dsm.id, professorId: profUser.id },
-            { nome: 'Estrutura de Dados', cargaHoraria: 80, semestre: '3', cursoId: dsm.id, professorId: profUser.id },
-            { nome: 'Sistemas Operacionais', cargaHoraria: 80, semestre: '2', cursoId: dsm.id, professorId: profUser.id },
+            { nome: 'Desenvolvimento Web III', cargaHoraria: 80, semestre: '4', cursoId: dsm.id, professorId },
+            { nome: 'Engenharia de Software II', cargaHoraria: 80, semestre: '4', cursoId: dsm.id, professorId },
+            { nome: 'Estrutura de Dados', cargaHoraria: 80, semestre: '3', cursoId: dsm.id, professorId },
+            { nome: 'Sistemas Operacionais', cargaHoraria: 80, semestre: '2', cursoId: dsm.id, professorId },
         ],
         skipDuplicates: true,
     });
@@ -71,9 +88,9 @@ async function main() {
     // 4. Criar as Disciplinas de Meio Ambiente
     await prisma.disciplina.createMany({
         data: [
-            { nome: 'Avaliação de Impactos Ambientais', cargaHoraria: 80, semestre: '3', cursoId: meioAmbiente.id, professorId: profUser.id },
-            { nome: 'Legislação Ambiental', cargaHoraria: 40, semestre: '2', cursoId: meioAmbiente.id, professorId: profUser.id },
-            { nome: 'Ecologia Aplicada', cargaHoraria: 80, semestre: '1', cursoId: meioAmbiente.id, professorId: profUser.id },
+            { nome: 'Avaliação de Impactos Ambientais', cargaHoraria: 80, semestre: '3', cursoId: meioAmbiente.id, professorId },
+            { nome: 'Legislação Ambiental', cargaHoraria: 40, semestre: '2', cursoId: meioAmbiente.id, professorId },
+            { nome: 'Ecologia Aplicada', cargaHoraria: 80, semestre: '1', cursoId: meioAmbiente.id, professorId },
         ],
         skipDuplicates: true,
     });
@@ -81,9 +98,9 @@ async function main() {
     // 5. Criar as Disciplinas de Geoprocessamento
     await prisma.disciplina.createMany({
         data: [
-            { nome: 'Sistemas de Informação Geográfica', cargaHoraria: 80, semestre: '2', cursoId: geo.id, professorId: profUser.id },
-            { nome: 'Topografia e Geodésia', cargaHoraria: 80, semestre: '1', cursoId: geo.id, professorId: profUser.id },
-            { nome: 'Processamento Digital de Imagens', cargaHoraria: 80, semestre: '4', cursoId: geo.id, professorId: profUser.id },
+            { nome: 'Sistemas de Informação Geográfica', cargaHoraria: 80, semestre: '2', cursoId: geo.id, professorId },
+            { nome: 'Topografia e Geodésia', cargaHoraria: 80, semestre: '1', cursoId: geo.id, professorId },
+            { nome: 'Processamento Digital de Imagens', cargaHoraria: 80, semestre: '4', cursoId: geo.id, professorId },
         ],
         skipDuplicates: true,
     });
