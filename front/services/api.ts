@@ -1,11 +1,12 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const IP_DA_MAQUINA = process.env.IP || "192.168.96.65";
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.96.65:3000";
 
 const api = axios.create({
-  // Já deixamos o /api no final para você não precisar repetir nas telas
-  baseURL: `http://${IP_DA_MAQUINA}:3000/api`,
+  // Deixa a URL do backend configuravel por ambiente.
+  baseURL: `${API_URL}/api`,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
