@@ -80,6 +80,7 @@ export default function StudentsScreen() {
 
   const [feedback, setFeedback] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
+  const [courseLoadError, setCourseLoadError] = useState("");
 
   // ── Refs para os TextInputs ──
   const matriculaRef = useRef<RNTextInput>(null);
@@ -110,7 +111,26 @@ export default function StudentsScreen() {
     loadStates().catch(() => undefined);
   }, [loadStates]);
   useEffect(() => {
-    loadCourses().catch(() => undefined);
+    let mounted = true;
+
+    const hydrateCourses = async () => {
+      setCourseLoadError("");
+
+      try {
+        await loadCourses();
+      } catch (error) {
+        if (!mounted) return;
+        setCourseLoadError(
+            error instanceof Error ? error.message : "Falha ao carregar cursos.",
+        );
+      }
+    };
+
+    hydrateCourses().catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
   }, [loadCourses]);
   useEffect(() => {
     if (values.estado) loadCitiesByState(values.estado).catch(() => undefined);
@@ -245,6 +265,8 @@ export default function StudentsScreen() {
                         <ActivityIndicator size="small" color={palette.primary} />
                         <Text style={styles.helperText}>Carregando cursos...</Text>
                       </View>
+                  ) : courseLoadError ? (
+                      <Text style={styles.errorText}>{courseLoadError}</Text>
                   ) : availableCourses.length === 0 ? (
                       <Text style={styles.helperText}>
                         Nenhum curso cadastrado no banco.

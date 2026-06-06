@@ -219,6 +219,8 @@ const styles = StyleSheet.create({
         backgroundColor: palette.primary,
         borderRadius: 28,
         padding: 18,
+        marginTop: 25,
+
         marginBottom: 16,
         shadowColor: palette.primary,
         shadowOffset: { width: 0, height: 8 },

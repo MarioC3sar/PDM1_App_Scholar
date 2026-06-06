@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "797e1b82-eb52-48a0-897a-2d41007725d3"
+      }
+    },
+    "android": {
+      "package": "com.mces_valves.pdm1appscholar"
+    }
+  }
+}

@@ -211,6 +211,8 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
     borderRadius: 28,
     padding: 18,
+    marginTop: 25,
+
     marginBottom: 16,
     shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 8 },
@@ -254,17 +256,6 @@ const styles = StyleSheet.create({
   heroBrandText: {
     color: "#fff",
     fontSize: 12,
-    fontWeight: "700",
-  },
-  backBtn: {
-    backgroundColor: "rgba(255,255,255,0.16)",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  backBtnText: {
-    color: "#fff",
-    fontSize: 13,
     fontWeight: "700",
   },
   heroSubtitle: {

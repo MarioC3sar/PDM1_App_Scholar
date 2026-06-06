@@ -206,8 +206,8 @@ export default function StudentsList() {
 
                     <View style={styles.metaGrid}>
                       <MetaRow icon="menu-book"   label="Curso"    value={student.curso} />
-                      <MetaRow icon="email"       label="E-mail pessoal"   value={student.emailPessoal} />
-                      <MetaRow icon="email"       label="E-mail institucional" value={student.emailInstitucional} />
+                      <MetaRow icon="person-outline" label="E-mail pessoal" value={student.emailPessoal} />
+                      <MetaRow icon="alternate-email" label="E-mail institucional" value={student.emailInstitucional} />
                       <MetaRow
                           icon="location-on"
                           label="Endereço"
@@ -237,6 +237,8 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
     borderRadius: 28,
     padding: 18,
+    marginTop: 25,
+
     marginBottom: 16,
     shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 8 },

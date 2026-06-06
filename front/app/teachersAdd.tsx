@@ -1,4 +1,4 @@
-import { Button, ErrorMessage, TextInput } from "@/components/ui"; // <-- Tirei o ScreenContainer daqui
+import { Button, ErrorMessage, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
 import { useForm } from "@/hooks/use-form";
@@ -15,7 +15,6 @@ import {
   SafeAreaView
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-// ↓ IMPORTAÇÃO DA BIBLIOTECA (Certifique-se de que ela está instalada) ↓
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const initialValues: TeacherFormData = {
@@ -60,15 +59,17 @@ export default function TeachersScreen() {
 
   return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.background || '#F8FAFB' }}>
-
-        {/* ↓ O SEGREDO ESTÁ AQUI: Ele substitui TODOS os containers anteriores ↓ */}
         <KeyboardAwareScrollView
             style={{ flex: 1 }}
-            // Simulamos o padding que o seu ScreenContainer provavelmente tinha
-            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 20,
+              paddingTop: 20,
+              paddingBottom: 40
+            }}
             enableOnAndroid={true}
-            extraHeight={120} // ← Essa é a mágica: força a tela a subir 120 pixels extras para o teclado não encostar no input!
-            keyboardShouldPersistTaps="handled" // Fecha o teclado se você clicar fora (substitui o TouchableWithoutFeedback)
+            extraHeight={120}
+            keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
         >
 
@@ -77,12 +78,19 @@ export default function TeachersScreen() {
             <View style={styles.glowOne} />
             <View style={styles.glowTwo} />
 
-            <View style={styles.heroTop}>
-              <View style={styles.heroBrand}>
-                <MaterialIcons name="person" size={16} color="rgba(255,255,255,0.9)" />
-                <Text style={styles.heroBrandText}>Gestão de Professores</Text>
-              </View>
+          <View style={styles.heroTop}>
+            <View style={styles.heroBrand}>
+              <MaterialIcons name="person" size={16} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroBrandText}>Gestão de Professores</Text>
             </View>
+            <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => router.back()}
+                activeOpacity={0.8}
+            >
+              <Text style={styles.backBtnText}>Voltar</Text>
+            </TouchableOpacity>
+          </View>
 
             <Text style={styles.heroSubtitle}>
               Preencha os campos de titulação, área de atuação e tempo de docência.
@@ -196,6 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: palette.primary,
     borderRadius: 28,
     padding: 18,
+    marginTop: 25,
     marginBottom: 16,
     shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 8 },
