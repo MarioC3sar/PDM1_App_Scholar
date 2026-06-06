@@ -12,7 +12,7 @@ services:
     region: oregon
     plan: starter
     dockerfilePath: backend/Dockerfile
-    dockerContext: backend
+    dockerContext: .
     envVars:
       - key: DATABASE_URL
         fromDatabase:

@@ -19,11 +19,12 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: appscholar-backend
     restart: unless-stopped
     command: sh -c "npx prisma migrate deploy && npx prisma generate && npm run dev"
-    working_dir: /app
+    working_dir: /app/backend
     ports:
       - "3001:3000"
     environment:
@@ -31,8 +32,8 @@ services:
       DATABASE_URL: postgresql://postgres:123456@db:5432/scholar_db?schema=public
       JWT_SECRET: appscholar-secret
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/app/backend
+      - /app/backend/node_modules
     depends_on:
       db:
         condition: service_healthy
