@@ -49,11 +49,11 @@ const getStudents = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
                 usuario: { select: { email: true, primeiroAcesso: true } },
             },
         });
-        const alunosFormatados = alunos.map((aluno) => {
-            var _a;
-            return (Object.assign(Object.assign({}, aluno), { emailPessoal: (_a = aluno.emailPessoal) !== null && _a !== void 0 ? _a : "", email: aluno.usuario.email, emailInstitucional: aluno.usuario.email, primeiroAcesso: aluno.usuario.primeiroAcesso, curso: aluno.curso.nome }));
+        const alunosFormatados = alunos.map((aluno) => (Object.assign(Object.assign({}, aluno), { email: aluno.usuario.email, emailInstitucional: aluno.usuario.email, primeiroAcesso: aluno.usuario.primeiroAcesso, curso: aluno.curso.nome })));
+        return res.json({
+            total: alunosFormatados.length,
+            alunos: alunosFormatados,
         });
-        return res.json({ total: alunosFormatados.length, alunos: alunosFormatados });
     }
     catch (error) {
         console.error("Erro ao buscar alunos:", error);

@@ -1,10 +1,46 @@
-import prisma from '../prismaClient';
+import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+import prisma from "../prismaClient";
+
+dotenv.config();
 
 async function main() {
     console.log('Iniciando o seed...');
 
     // 1. Criar um Usuário e Professor genérico para vincular às disciplinas
     // (Usando upsert para não dar erro se rodar o seed mais de uma vez)
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail) {
+        throw new Error("ADMIN_EMAIL is required");
+    }
+
+    if (!adminPassword) {
+        throw new Error("ADMIN_PASSWORD is required");
+    }
+
+    const adminSenhaHash = await bcrypt.hash(adminPassword, 10);
+
+    const AdminUser = await prisma.usuario.upsert({
+        where: { email: adminEmail },
+        update: {
+            senhaHash: adminSenhaHash,
+            perfil: "ADMIN",
+            primeiroAcesso: false,
+        },
+        create: {
+            email: adminEmail,
+            senhaHash: adminSenhaHash,
+            perfil: "ADMIN",
+            primeiroAcesso: false,
+        },
+    });
+
+    console.log(`Admin criado/atualizado: ${AdminUser.email}`);
+
+
     const profUser = await prisma.usuario.upsert({
         where: { email: 'professor.padrao@fatec.sp.gov.br' },
         update: {},

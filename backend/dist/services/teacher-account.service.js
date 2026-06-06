@@ -13,12 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createStudentAccount = void 0;
+exports.createTeacherAccount = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const prismaClient_1 = __importDefault(require("../prismaClient"));
 const zodController_1 = require("../schemas/zodController");
-const INSTITUTIONAL_EMAIL_DOMAIN = (_a = process.env.INSTITUTIONAL_EMAIL_DOMAIN) !== null && _a !== void 0 ? _a : "aluno.scholar.edu.br";
-const TEMPORARY_PASSWORD = (_b = process.env.TEMP_STUDENT_PASSWORD) !== null && _b !== void 0 ? _b : "Aluno@2026";
+const INSTITUTIONAL_EMAIL_DOMAIN = (_a = process.env.INSTITUTIONAL_EMAIL_DOMAIN) !== null && _a !== void 0 ? _a : "professor.scholar.edu.br";
+const TEMPORARY_PASSWORD = (_b = process.env.TEMP_TEACHER_PASSWORD) !== null && _b !== void 0 ? _b : "Professor@2026";
 const removeAccents = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const sanitizeNamePart = (value) => removeAccents(value)
     .toLowerCase()
@@ -30,8 +30,8 @@ const buildEmailBase = (nome) => {
         .split(/\s+/)
         .map(sanitizeNamePart)
         .filter(Boolean);
-    const firstName = (_a = parts[0]) !== null && _a !== void 0 ? _a : "aluno";
-    const lastName = parts.length > 1 ? parts[parts.length - 1] : "aluno";
+    const firstName = (_a = parts[0]) !== null && _a !== void 0 ? _a : "professor";
+    const lastName = parts.length > 1 ? parts[parts.length - 1] : "professor";
     return `${firstName}.${lastName}`;
 };
 const buildUniqueInstitutionalEmail = (tx, nome) => __awaiter(void 0, void 0, void 0, function* () {
@@ -49,17 +49,17 @@ const buildUniqueInstitutionalEmail = (tx, nome) => __awaiter(void 0, void 0, vo
         counter += 1;
     }
 });
-const createStudentAccount = (input) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = zodController_1.createStudentAccountSchema.parse(input);
+const createTeacherAccount = (input) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = zodController_1.createTeacherAccountSchema.parse(input);
     return prismaClient_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a;
         const email = yield buildUniqueInstitutionalEmail(tx, data.nome);
         const senhaHash = yield bcryptjs_1.default.hash(TEMPORARY_PASSWORD, 10);
         const usuario = yield tx.usuario.create({
             data: {
                 email,
                 senhaHash,
-                perfil: "ALUNO",
+                perfil: "PROFESSOR",
                 primeiroAcesso: true,
             },
             select: {
@@ -68,41 +68,29 @@ const createStudentAccount = (input) => __awaiter(void 0, void 0, void 0, functi
                 primeiroAcesso: true,
             },
         });
-        const aluno = yield tx.aluno.create({
+        const professor = yield tx.professor.create({
             data: {
                 nome: data.nome,
-                matricula: data.matricula,
+                titulacao: data.titulacao,
+                area: data.area,
+                tempoDocencia: (_a = data.tempoDocencia) !== null && _a !== void 0 ? _a : null,
                 emailPessoal: data.email,
-                cursoId: data.cursoId,
                 usuarioId: usuario.id,
-                telefone: (_a = data.telefone) !== null && _a !== void 0 ? _a : null,
-                cep: (_b = data.cep) !== null && _b !== void 0 ? _b : null,
-                logradouro: (_c = data.logradouro) !== null && _c !== void 0 ? _c : null,
-                numero: (_d = data.numero) !== null && _d !== void 0 ? _d : null,
-                bairro: (_e = data.bairro) !== null && _e !== void 0 ? _e : null,
-                cidade: (_f = data.cidade) !== null && _f !== void 0 ? _f : null,
-                estado: (_g = data.estado) !== null && _g !== void 0 ? _g : null,
             },
             select: {
                 id: true,
                 nome: true,
-                matricula: true,
+                titulacao: true,
+                area: true,
+                tempoDocencia: true,
                 emailPessoal: true,
-                telefone: true,
-                cep: true,
-                logradouro: true,
-                numero: true,
-                bairro: true,
-                cidade: true,
-                estado: true,
-                cursoId: true,
             },
         });
         return {
             usuario,
-            aluno,
+            professor,
             senhaTemporaria: TEMPORARY_PASSWORD,
         };
     }));
 });
-exports.createStudentAccount = createStudentAccount;
+exports.createTeacherAccount = createTeacherAccount;

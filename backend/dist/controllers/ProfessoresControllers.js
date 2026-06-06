@@ -13,60 +13,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTeachers = exports.createTeacher = void 0;
-const client_1 = require("@prisma/client");
 const prismaClient_1 = __importDefault(require("../prismaClient"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const requiredFields = ["nome", "titulacao", "area", "tempoDocencia", "email"];
+const zodController_1 = require("../schemas/zodController");
+const teacher_account_service_1 = require("../services/teacher-account.service");
 const createTeacher = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const missingFields = requiredFields.filter((field) => { var _a; return !String((_a = req.body[field]) !== null && _a !== void 0 ? _a : "").trim(); });
-        if (missingFields.length > 0) {
+        const validacao = zodController_1.createTeacherAccountSchema.safeParse(req.body);
+        if (!validacao.success) {
             return res.status(400).json({
-                message: "Campos obrigatórios ausentes.",
-                campos: missingFields,
+                message: "Erro na validacao dos dados.",
+                detalhes: validacao.error.format(),
             });
         }
-        const { nome, titulacao, area, tempoDocencia, email } = req.body;
-        // 1. Verifica se o e-mail já existe na tabela de Usuários (para evitar duplicidade no login)
-        const existingUser = yield prismaClient_1.default.usuario.findUnique({
-            where: { email },
-        });
-        if (existingUser) {
-            return res.status(409).json({ message: "E-mail já está em uso por outro usuário." });
-        }
-        // 2. Define uma senha padrão (ex: pegando a parte do email antes do '@')
-        const senhaPadrao = email.split('@')[0];
-        const senhaHash = yield bcryptjs_1.default.hash(senhaPadrao, 10);
-        // 3. NESTED WRITE: Cria o Usuário E o Professor na mesma transação!
-        const novoUsuario = yield prismaClient_1.default.usuario.create({
-            data: {
-                email: email,
-                senhaHash: senhaHash,
-                perfil: client_1.Perfil.PROFESSOR, // Usa o Enum gerado pelo Prisma
-                // Entra na tabela Professor e vincula o ID automaticamente
-                professor: {
-                    create: {
-                        nome,
-                        titulacao,
-                        area,
-                        tempoDocencia
-                    }
-                }
-            },
-            include: {
-                professor: true
-            }
-        });
+        const resultado = yield (0, teacher_account_service_1.createTeacherAccount)(validacao.data);
         return res.status(201).json({
-            message: "Professor e usuário de acesso cadastrados com sucesso.",
-            professor: novoUsuario.professor,
-            email_acesso: novoUsuario.email,
-            senha_temporaria: senhaPadrao // Envia a senha gerada para exibir na tela do Admin
+            message: "Professor e usuario de acesso cadastrados com sucesso.",
+            professor: resultado.professor,
+            email_pessoal: resultado.professor.emailPessoal,
+            email_acesso: resultado.usuario.email,
+            senha_temporaria: resultado.senhaTemporaria,
         });
     }
     catch (error) {
+        const message = error instanceof Error ? error.message : "Erro interno do servidor.";
         console.error("Erro ao cadastrar professor:", error);
-        return res.status(500).json({ message: "Erro interno do servidor." });
+        return res.status(500).json({ message });
     }
 });
 exports.createTeacher = createTeacher;
@@ -74,15 +45,15 @@ const getTeachers = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const professores = yield prismaClient_1.default.professor.findMany({
             orderBy: { id: "desc" },
-            // Busca o email na tabela de usuários para devolver ao Frontend
             include: {
-                usuario: { select: { email: true } }
-            }
+                usuario: { select: { email: true } },
+            },
         });
-        // Remonta o objeto para o App Scholar continuar funcionando perfeitamente
-        const professoresFormatados = professores.map(prof => (Object.assign(Object.assign({}, prof), { email: prof.usuario.email // Puxa o email de volta para o nível principal do objeto
-         })));
-        return res.json({ total: professoresFormatados.length, professores: professoresFormatados });
+        const professoresFormatados = professores.map((professor) => (Object.assign(Object.assign({}, professor), { email: professor.usuario.email })));
+        return res.json({
+            total: professoresFormatados.length,
+            professores: professoresFormatados,
+        });
     }
     catch (error) {
         console.error("Erro ao buscar professores:", error);
