@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
+import { bootstrapAdmin } from "./prisma/admin-bootstrap";
 
 // Importa o NOVO arquivo central de rotas que criamos
 import routes from "./routes/routes";
@@ -32,6 +33,18 @@ app.get("/", (_req, res) => {
 const startServer = async () => {
   // O Prisma faz a conexão com o banco de forma automática na primeira requisição,
   // então não precisamos mais daquele 'await connectToDatabase()' antigo.
+
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (adminEmail && adminPassword) {
+    const admin = await bootstrapAdmin(adminEmail, adminPassword);
+    console.log(`Admin bootstrap concluido: ${admin.email}`);
+  } else {
+    console.log(
+      "ADMIN_EMAIL/ADMIN_PASSWORD nao definidos; bootstrap de admin ignorado.",
+    );
+  }
 
   app.listen(PORT, () => {
     console.log(`🚀 Servidor AppScholar iniciado com sucesso na porta ${PORT}.`);

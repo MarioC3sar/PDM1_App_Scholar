@@ -12,25 +12,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv_1 = __importDefault(require("dotenv"));
-const admin_bootstrap_1 = require("./admin-bootstrap");
-dotenv_1.default.config();
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const email = process.env.ADMIN_EMAIL;
-        const password = process.env.ADMIN_PASSWORD;
-        if (!email) {
-            throw new Error("ADMIN_EMAIL is required");
-        }
-        if (!password) {
-            throw new Error("ADMIN_PASSWORD is required");
-        }
-        const admin = yield (0, admin_bootstrap_1.bootstrapAdmin)(email, password);
-        console.log(`ADMIN criado/atualizado: ${admin.email}`);
+exports.bootstrapAdmin = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const prismaClient_1 = __importDefault(require("../prismaClient"));
+const bootstrapAdmin = (email, password) => __awaiter(void 0, void 0, void 0, function* () {
+    const senhaHash = yield bcryptjs_1.default.hash(password, 10);
+    return prismaClient_1.default.usuario.upsert({
+        where: { email },
+        update: {
+            senhaHash,
+            perfil: "ADMIN",
+            primeiroAcesso: false,
+        },
+        create: {
+            email,
+            senhaHash,
+            perfil: "ADMIN",
+            primeiroAcesso: false,
+        },
     });
-}
-main()
-    .catch((error) => {
-    console.error(error);
-    process.exit(1);
 });
+exports.bootstrapAdmin = bootstrapAdmin;

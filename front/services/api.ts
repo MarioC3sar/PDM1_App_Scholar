@@ -1,11 +1,16 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.96.65:3000";
+const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+
+if (!API_URL) {
+  throw new Error(
+    "EXPO_PUBLIC_API_URL nao definido. Configure a URL do backend do Render.",
+  );
+}
 
 const api = axios.create({
-  // Deixa a URL do backend configuravel por ambiente.
+  // Base URL configuravel por ambiente.
   baseURL: `${API_URL}/api`,
   timeout: 10000,
   headers: {

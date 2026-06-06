@@ -1,6 +1,5 @@
-import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import prisma from "../prismaClient";
+import { bootstrapAdmin } from "./admin-bootstrap";
 
 dotenv.config();
 
@@ -16,22 +15,7 @@ async function main() {
     throw new Error("ADMIN_PASSWORD is required");
   }
 
-  const senhaHash = await bcrypt.hash(password, 10);
-
-  const admin = await prisma.usuario.upsert({
-    where: { email },
-    update: {
-      senhaHash,
-      perfil: "ADMIN",
-      primeiroAcesso: false,
-    },
-    create: {
-      email,
-      senhaHash,
-      perfil: "ADMIN",
-      primeiroAcesso: false,
-    },
-  });
+  const admin = await bootstrapAdmin(email, password);
 
   console.log(`ADMIN criado/atualizado: ${admin.email}`);
 }
@@ -40,7 +24,4 @@ main()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });

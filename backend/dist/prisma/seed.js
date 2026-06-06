@@ -12,8 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const admin_bootstrap_1 = require("./admin-bootstrap");
 const prismaClient_1 = __importDefault(require("../prismaClient"));
 dotenv_1.default.config();
 function main() {
@@ -29,21 +29,7 @@ function main() {
         if (!adminPassword) {
             throw new Error("ADMIN_PASSWORD is required");
         }
-        const adminSenhaHash = yield bcryptjs_1.default.hash(adminPassword, 10);
-        const AdminUser = yield prismaClient_1.default.usuario.upsert({
-            where: { email: adminEmail },
-            update: {
-                senhaHash: adminSenhaHash,
-                perfil: "ADMIN",
-                primeiroAcesso: false,
-            },
-            create: {
-                email: adminEmail,
-                senhaHash: adminSenhaHash,
-                perfil: "ADMIN",
-                primeiroAcesso: false,
-            },
-        });
+        const AdminUser = yield (0, admin_bootstrap_1.bootstrapAdmin)(adminEmail, adminPassword);
         console.log(`Admin criado/atualizado: ${AdminUser.email}`);
         const profUser = yield prismaClient_1.default.usuario.upsert({
             where: { email: 'professor.padrao@fatec.sp.gov.br' },
