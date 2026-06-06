@@ -1,0 +1,10 @@
+{
+  "name": "pdm1-app-scholar",
+  "private": true,
+  "scripts": {
+    "up": "docker compose up -d --build",
+    "down": "docker compose down",
+    "seed": "docker compose exec backend npm run seed",
+    "logs": "docker compose logs -f backend"
+  }
+}

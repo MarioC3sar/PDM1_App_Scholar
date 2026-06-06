@@ -1,0 +1,23 @@
+databases:
+  - name: appscholar-db
+    plan: free
+    region: oregon
+    databaseName: scholar_db
+    user: postgres
+
+services:
+  - type: web
+    runtime: docker
+    name: appscholar-backend
+    region: oregon
+    plan: starter
+    rootDir: backend
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: appscholar-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
