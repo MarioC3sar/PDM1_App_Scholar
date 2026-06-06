@@ -3,7 +3,7 @@ databases:
     plan: free
     region: oregon
     databaseName: scholar_db
-    user: postgres
+    user: appscholar_user
 
 services:
   - type: web
