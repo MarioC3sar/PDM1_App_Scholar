@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 import { Course, CourseFormData } from "@/types";
 import { getCoursesFromApi, ApiCourse } from "@/services/course-service";
 import { getTeachersFromApi } from "@/services/teacher-service";
@@ -78,18 +78,10 @@ export const getDisciplinesFromApi = async (): Promise<Course[]> => {
     }));
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao buscar disciplinas.");
+      throw new Error(getApiErrorMessage(error, "Falha ao buscar disciplinas."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao buscar disciplinas.");
+    throw error instanceof Error ? error : new Error("Falha ao buscar disciplinas.");
   }
 };
 
@@ -120,18 +112,10 @@ export const createDisciplineOnApi = async (
     };
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao cadastrar disciplina.");
+      throw new Error(getApiErrorMessage(error, "Falha ao cadastrar disciplina."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao cadastrar disciplina.");
+    throw error instanceof Error ? error : new Error("Falha ao cadastrar disciplina.");
   }
 };
 
@@ -182,17 +166,9 @@ export const updateDisciplineOnApi = async (
     };
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao atualizar disciplina.");
+      throw new Error(getApiErrorMessage(error, "Falha ao atualizar disciplina."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao atualizar disciplina.");
+    throw error instanceof Error ? error : new Error("Falha ao atualizar disciplina.");
   }
 };

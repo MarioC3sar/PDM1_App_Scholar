@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 import { Teacher, TeacherFormData } from "@/types";
 
 type CreateTeacherResponse = {
@@ -42,18 +42,10 @@ export const getTeachersFromApi = async (): Promise<Teacher[]> => {
     }));
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao buscar professores.");
+      throw new Error(getApiErrorMessage(error, "Falha ao buscar professores."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error();
+    throw error instanceof Error ? error : new Error("Falha ao buscar professores.");
   }
 };
 
@@ -89,17 +81,9 @@ export const createTeacherOnApi = async (
     };
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao cadastrar professor.");
+      throw new Error(getApiErrorMessage(error, "Falha ao cadastrar professor."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao cadastrar professor.");
+    throw error instanceof Error ? error : new Error("Falha ao cadastrar professor.");
   }
 };

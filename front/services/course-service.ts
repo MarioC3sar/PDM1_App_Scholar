@@ -1,4 +1,4 @@
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 
 export interface ApiCourse {
   id: number;
@@ -12,6 +12,10 @@ type GetCoursesResponse = {
 };
 
 export const getCoursesFromApi = async (): Promise<ApiCourse[]> => {
-  const response = await api.get<GetCoursesResponse>("/cursos");
-  return response.data.cursos ?? [];
+  try {
+    const response = await api.get<GetCoursesResponse>("/cursos");
+    return response.data.cursos ?? [];
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Falha ao buscar cursos."));
+  }
 };

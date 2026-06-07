@@ -1,6 +1,7 @@
 import { Button, Card, ScreenContainer, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAuth } from "@/hooks/use-auth";
+import { getApiErrorMessage } from "@/services/api";
 import {
   getAllDisciplines,
   getDisciplineGrades,
@@ -82,11 +83,7 @@ export const GradeEditorScreen = () => {
           }
         }
       } catch (requestError) {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Falha ao carregar disciplinas.",
-        );
+        setError(getApiErrorMessage(requestError, "Falha ao carregar disciplinas."));
       } finally {
         setLoadingDisciplines(false);
       }
@@ -118,9 +115,7 @@ export const GradeEditorScreen = () => {
         );
       } catch (requestError) {
         setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Falha ao carregar notas da disciplina.",
+          getApiErrorMessage(requestError, "Falha ao carregar notas da disciplina."),
         );
       } finally {
         setLoadingGrades(false);
@@ -212,11 +207,7 @@ export const GradeEditorScreen = () => {
       setEditingId(null);
       setSuccess(`Notas de ${grade.aluno} atualizadas com sucesso.`);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Falha ao salvar alterações.",
-      );
+      setError(getApiErrorMessage(requestError, "Falha ao salvar alterações."));
     } finally {
       setSavingId(null);
     }
@@ -232,7 +223,7 @@ export const GradeEditorScreen = () => {
             <Text style={styles.heroBadgeText}>{isAdmin ? "Admin" : "Professor"}</Text>
           </View>
         </View>
-        <Text style={styles.title}>Grade Editor</Text>
+        <Text style={styles.title}>Grade de edição</Text>
         <Text style={styles.subtitle}>
           {isAdmin
             ? "Selecione a disciplina e revise as notas de qualquer turma."
@@ -557,14 +548,27 @@ const styles = StyleSheet.create({
   disciplineRow: {
     flexDirection: "row",
     gap: 10,
+    paddingVertical: 4,
   },
   disciplineChip: {
-    minWidth: 180,
-    padding: 14,
-    borderRadius: 12,
+    width: 240,
+    minWidth: 240,
+    maxWidth: 280,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    borderRadius: 16,
     backgroundColor: palette.surfaceAlt,
     borderWidth: 1,
     borderColor: palette.border,
+    flexShrink: 0,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   disciplineChipSelected: {
     backgroundColor: palette.primary,
@@ -573,7 +577,8 @@ const styles = StyleSheet.create({
   disciplineChipTitle: {
     fontWeight: "800",
     color: palette.text,
-    marginBottom: 4,
+    fontSize: 15,
+    lineHeight: 20,
   },
   disciplineChipTitleSelected: {
     color: "#fff",
@@ -581,6 +586,7 @@ const styles = StyleSheet.create({
   disciplineChipMeta: {
     fontSize: 12,
     color: palette.textMuted,
+    lineHeight: 16,
   },
   disciplineChipMetaSelected: {
     color: "rgba(255,255,255,0.85)",

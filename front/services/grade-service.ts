@@ -1,4 +1,4 @@
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 
 export type ProfessorDisciplineSummary = {
   id: number;
@@ -72,22 +72,38 @@ export type UpdateGradePayload = {
 };
 
 export const getProfessorDisciplines = async (): Promise<ProfessorDisciplinesResponse> => {
-  const response = await api.get<ProfessorDisciplinesResponse>("/professores/me/disciplinas");
-  return response.data;
+  try {
+    const response = await api.get<ProfessorDisciplinesResponse>("/professores/me/disciplinas");
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Falha ao carregar disciplinas do professor."),
+    );
+  }
 };
 
 export const getAllDisciplines = async (): Promise<EditableDisciplineSummary[]> => {
-  const response = await api.get<DisciplinesResponse>("/disciplinas");
-  return response.data.disciplinas ?? [];
+  try {
+    const response = await api.get<DisciplinesResponse>("/disciplinas");
+    return response.data.disciplinas ?? [];
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Falha ao carregar disciplinas."));
+  }
 };
 
 export const getDisciplineGrades = async (
   disciplinaId: number,
 ): Promise<ProfessorDisciplineGradesResponse> => {
-  const response = await api.get<ProfessorDisciplineGradesResponse>(
-    `/professores/me/disciplinas/${disciplinaId}/notas`,
-  );
-  return response.data;
+  try {
+    const response = await api.get<ProfessorDisciplineGradesResponse>(
+      `/professores/me/disciplinas/${disciplinaId}/notas`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Falha ao carregar notas da disciplina."),
+    );
+  }
 };
 
 export const getProfessorDisciplineGrades = getDisciplineGrades;
@@ -102,6 +118,10 @@ export const updateStudentGrade = async (
     disciplina: string;
   };
 }> => {
-  const response = await api.put(`/notas/${notaId}`, data);
-  return response.data;
+  try {
+    const response = await api.put(`/notas/${notaId}`, data);
+    return response.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Falha ao salvar alterações."));
+  }
 };

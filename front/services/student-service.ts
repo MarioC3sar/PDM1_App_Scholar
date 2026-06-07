@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 import { Student, StudentFormData, StudentAccountResult } from "@/types";
 import { ApiCourse, getCoursesFromApi } from "@/services/course-service";
 
@@ -118,18 +118,10 @@ export const createStudentOnApi = async (
     };
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao cadastrar aluno.");
+      throw new Error(getApiErrorMessage(error, "Falha ao cadastrar aluno."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao cadastrar aluno.");
+    throw error instanceof Error ? error : new Error("Falha ao cadastrar aluno.");
   }
 };
 
@@ -155,17 +147,9 @@ export const getStudentsFromApi = async (): Promise<Student[]> => {
     }));
   } catch (error) {
     if (isAxiosError(error)) {
-      const backendMessage =
-        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
-          ?.message ??
-        (error.response?.data as { detalhes?: { message?: string } } | undefined)
-          ?.detalhes?.message;
-
-      throw new Error(backendMessage ?? "Falha ao buscar alunos.");
+      throw new Error(getApiErrorMessage(error, "Falha ao buscar alunos."));
     }
 
-    throw error instanceof Error
-      ? error
-      : new Error("Falha ao buscar alunos.");
+    throw error instanceof Error ? error : new Error("Falha ao buscar alunos.");
   }
 };

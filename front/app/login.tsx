@@ -1,8 +1,7 @@
 import React, { useRef, useState } from "react";
 import {
   Image,
-  KeyboardAvoidingView,
-  Platform,
+  SafeAreaView,
   StyleSheet,
   Text,
   View,
@@ -17,6 +16,7 @@ import { palette } from "@/constants/theme";
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "@/hooks/use-form";
 import { LoginCredentials } from "@/types";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const initialValues: LoginCredentials = {
   login: "",
@@ -50,49 +50,54 @@ export default function LoginScreen() {
   }
 
   return (
-      <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.root}
+    <SafeAreaView style={styles.root}>
+      <KeyboardAwareScrollView
+        style={styles.root}
+        contentContainerStyle={styles.scrollContent}
+        enableOnAndroid
+        enableAutomaticScroll
+        extraScrollHeight={120}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.screen}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View style={styles.screen}>
+              {/* ── Brand hero ── */}
+              <View style={styles.hero}>
+                <View style={styles.glowTopRight} />
+                <View style={styles.glowBottomLeft} />
 
-            {/* ── Brand hero ── */}
-            <View style={styles.hero}>
-              <View style={styles.glowTopRight} />
-              <View style={styles.glowBottomLeft} />
-
-              <View style={styles.logoWrapper}>
-                <Image
+                <View style={styles.logoWrapper}>
+                  <Image
                     source={require("@/assets/images/appscholar.png")}
                     style={styles.logo}
                     resizeMode="contain"
-                />
+                  />
+                </View>
+
+                <Text style={styles.heroSubtitle}>Sistema de Gestão Acadêmica</Text>
               </View>
 
-              <Text style={styles.heroSubtitle}>Sistema de Gestão Acadêmica</Text>
-            </View>
+              {/* ── Form card ── */}
+              <View style={styles.formCard}>
+                <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
-            {/* ── Form card ── */}
-            <View style={styles.formCard}>
-
-              <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
-
-              <TextInput
+                <TextInput
                   label="Email"
                   placeholder="seuemail@fatec.edu.br"
                   autoCapitalize="none"
                   value={values.login}
                   autoCorrect={false}
                   returnKeyType="next"
-                  blurOnSubmit={false} // <-- Evita que o teclado feche ao passar para o próximo campo
+                  blurOnSubmit={false}
                   onSubmitEditing={() => passwordInputRef.current?.focus()}
                   onChangeText={(text) => handleChange("login", text)}
                   error={errors.login}
                   required
-              />
+                />
 
-              <TextInput
+                <TextInput
                   ref={passwordInputRef}
                   label="Senha"
                   placeholder="••••••••"
@@ -101,38 +106,35 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="go"
-                  onSubmitEditing={handleSubmit} // <-- Submete o formulário direto pelo teclado
+                  onSubmitEditing={handleSubmit}
                   onChangeText={(text) => handleChange("password", text)}
                   error={errors.password}
                   required
-              />
+                />
 
-              {/* Botão de Mostrar/Ocultar Senha */}
-              <TouchableOpacity
+                <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.showPasswordButton}
-              >
-                <Text style={styles.showPasswordText}>
-                  {showPassword ? "Ocultar senha" : "Mostrar senha"}
-                </Text>
-              </TouchableOpacity>
+                >
+                  <Text style={styles.showPasswordText}>
+                    {showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  </Text>
+                </TouchableOpacity>
 
-              <Button
+                <Button
                   title={loading ? "Entrando..." : "Entrar"}
                   loading={loading}
                   onPress={handleSubmit}
-              />
+                />
+              </View>
 
+              <Text style={styles.footer}>
+                © {new Date().getFullYear()} McVALves — Todos os direitos reservados
+              </Text>
             </View>
-
-            {/* ── Footer ── */}
-            <Text style={styles.footer}>
-              © {new Date().getFullYear()} McVALves — Todos os direitos reservados
-            </Text>
-
-          </View>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -141,13 +143,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.primary,
   },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: palette.primary,
+  },
   screen: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 32,
+    paddingBottom: 28,
     justifyContent: "center",
-    gap: 20,
+    gap: 18,
   },
 
   // Hero
@@ -175,9 +181,9 @@ const styles = StyleSheet.create({
     left: -30,
   },
   logoWrapper: {
-    width: 180,
-    height: 180,
-    borderRadius: 100,
+    width: 168,
+    height: 168,
+    borderRadius: 84,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -190,8 +196,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   logo: {
-    width: 340,
-    height: 196,
+    width: 320,
+    height: 186,
   },
   heroTitle: {
     color: "#fff",
@@ -212,7 +218,7 @@ const styles = StyleSheet.create({
   // Form card
   formCard: {
     backgroundColor: "#fff",
-    borderRadius: 24,
+    borderRadius: 28,
     padding: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -251,11 +257,12 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
     fontWeight: "500",
     letterSpacing: 0.3,
+    paddingTop: 4,
   },
   showPasswordButton: {
     alignSelf: "flex-end", // Alinha à direita
-    marginTop: -10,        // Ajuste esse valor dependendo da margem interna do seu componente TextInput
-    marginBottom: 20,
+    marginTop: -10,
+    marginBottom: 18,
   },
   showPasswordText: {
     fontSize: 13,

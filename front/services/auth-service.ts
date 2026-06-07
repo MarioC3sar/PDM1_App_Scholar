@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import api from "@/services/api";
+import api, { getApiErrorMessage } from "@/services/api";
 import { LoginCredentials, User } from "@/types";
 
 type LoginResponse = {
@@ -55,9 +55,9 @@ export const loginWithApi = async (
     };
   } catch (error) {
     console.error("Erro na requisicao de login:", error);
-    throw error instanceof Error
-      ? error
-      : new Error("Falha na autenticacao. Verifique suas credenciais.");
+    throw new Error(
+      getApiErrorMessage(error, "Falha na autenticacao. Verifique suas credenciais."),
+    );
   }
 };
 

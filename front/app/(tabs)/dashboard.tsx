@@ -1,5 +1,6 @@
 import { palette } from "@/constants/theme";
 import { useAuth } from "@/hooks/use-auth";
+import { getDashboardStats } from "@/services/dashboard-service";
 import { getDisciplinesFromApi } from "@/services/discipline-service";
 import { getStudentsFromApi } from "@/services/student-service";
 import { getTeachersFromApi } from "@/services/teacher-service";
@@ -81,6 +82,7 @@ export default function DashboardScreen() {
   const [studentCount, setStudentCount] = useState<number | null>(null);
   const [teacherCount, setTeacherCount] = useState<number | null>(null);
   const [disciplineCount, setDisciplineCount] = useState<number | null>(null);
+  const [approvalRate, setApprovalRate] = useState<number | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState("");
 
@@ -97,10 +99,11 @@ export default function DashboardScreen() {
       setStatsError("");
 
       try {
-        const [students, teachers, disciplines] = await Promise.all([
+        const [students, teachers, disciplines, dashboardStats] = await Promise.all([
           getStudentsFromApi(),
           getTeachersFromApi(),
           getDisciplinesFromApi(),
+          getDashboardStats(),
         ]);
 
         if (!mounted) return;
@@ -108,6 +111,8 @@ export default function DashboardScreen() {
         setStudentCount(students.length);
         setTeacherCount(teachers.length);
         setDisciplineCount(disciplines.length);
+        setApprovalRate(dashboardStats.approvalRate);
+
       } catch (error) {
         if (!mounted) return;
         setStatsError(
@@ -116,6 +121,7 @@ export default function DashboardScreen() {
         setStudentCount(0);
         setTeacherCount(0);
         setDisciplineCount(0);
+        setApprovalRate(0);
       } finally {
         if (mounted) {
           setLoadingStats(false);
@@ -156,9 +162,10 @@ export default function DashboardScreen() {
         },
         {
           label: "Aprovação",
-          value: "85%",
+          value: loadingStats ? "..." : `${(approvalRate ?? 0).toFixed(0)}%`,
           icon: "trending-up" as keyof typeof MaterialIcons.glyphMap,
         },
+
       ]
     : [];
 
