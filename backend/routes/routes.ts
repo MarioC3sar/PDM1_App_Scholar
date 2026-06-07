@@ -34,8 +34,8 @@ router.get("/disciplinas", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getDiscip
 router.get("/alunos", autorizar(["ADMIN", "PROFESSOR"]), getStudents);
 router.get("/professores", autorizar(["ADMIN"]), getTeachers);
 
-router.get("/notas/:matricula", autorizar(["ALUNO", "ADMIN", "PROFESSOR"]), getGrades);
 router.get("/notas/me", autorizar(["ALUNO"]), getMyGrades);
+router.get("/notas/:matricula", autorizar(["ALUNO", "ADMIN", "PROFESSOR"]), getGrades);
 router.get("/professores/me/disciplinas", autorizar(["PROFESSOR"]), getProfessorDisciplines);
 router.get(
   "/professores/me/disciplinas/:disciplinaId/notas",
