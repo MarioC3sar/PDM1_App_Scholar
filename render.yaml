@@ -13,7 +13,7 @@ services:
     plan: starter
     dockerfilePath: backend/Dockerfile
     dockerContext: .
-    preDeployCommand: npm --prefix backend migrate:deploy && npm --prefix backend run seed
+    preDeployCommand: npm --prefix backend run migrate:deploy && npm --prefix backend run seed
     envVars:
       - key: DATABASE_URL
         fromDatabase:
