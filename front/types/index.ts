@@ -25,6 +25,7 @@ export interface Student {
   id: string;
   nome: string;
   matricula: string;
+  semestre: string;
   curso: string;
   emailPessoal: string;
   emailInstitucional: string;
@@ -40,6 +41,7 @@ export interface Student {
 export interface StudentFormData {
   nome: string;
   matricula: string;
+  semestre: string;
   curso: string;
   email: string;
   telefone: string;

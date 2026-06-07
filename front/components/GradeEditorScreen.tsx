@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   centerRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     gap: 10,
   },

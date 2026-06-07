@@ -64,6 +64,7 @@ export type CreateStudentAccountResult = {
     id: number;
     nome: string;
     matricula: string;
+    semestre: string;
     emailPessoal: string | null;
     telefone: string | null;
     cep: string | null;
@@ -104,6 +105,7 @@ export const createStudentAccount = async (
       data: {
         nome: data.nome,
         matricula: data.matricula,
+        semestre: data.semestre,
         emailPessoal: data.email,
         cursoId: data.cursoId,
         usuarioId: usuario.id,
@@ -119,6 +121,7 @@ export const createStudentAccount = async (
         id: true,
         nome: true,
         matricula: true,
+        semestre: true,
         emailPessoal: true,
         telefone: true,
         cep: true,
@@ -130,6 +133,24 @@ export const createStudentAccount = async (
         cursoId: true,
       },
     });
+
+    const disciplinasDoSemestre = await tx.disciplina.findMany({
+      where: {
+        cursoId: data.cursoId,
+        semestre: data.semestre,
+      },
+      select: { id: true },
+    });
+
+    if (disciplinasDoSemestre.length > 0) {
+      await tx.nota.createMany({
+        data: disciplinasDoSemestre.map((disciplina) => ({
+          alunoId: aluno.id,
+          disciplinaId: disciplina.id,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     return {
       usuario,

@@ -47,6 +47,7 @@ export const getStudents = async (_req: Request, res: Response) => {
       emailInstitucional: aluno.usuario.email,
       primeiroAcesso: aluno.usuario.primeiroAcesso,
       curso: aluno.curso.nome,
+      semestre: aluno.semestre,
     }));
 
     return res.json({

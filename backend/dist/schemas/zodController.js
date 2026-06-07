@@ -7,6 +7,7 @@ exports.createStudentAccountSchema = zod_1.z
     .object({
     nome: zod_1.z.string().min(3, "O nome deve ter no minimo 3 caracteres."),
     matricula: zod_1.z.string().min(5, "A matricula deve ter no minimo 5 caracteres."),
+    semestre: zod_1.z.string().min(1, "O semestre deve ser informado."),
     cursoId: zod_1.z.coerce.number().int().positive("O ID do curso deve ser um numero valido e positivo."),
     email: zod_1.z.string().email("O e-mail pessoal deve ser valido."),
     telefone: zod_1.z.string().optional(),

@@ -9,6 +9,7 @@ type CreateStudentResponse = {
     id: number;
     nome: string;
     matricula: string;
+    semestre: string;
     emailPessoal?: string | null;
     telefone?: string | null;
     cep?: string | null;
@@ -33,6 +34,7 @@ type GetStudentsResponse = {
     id: number;
     nome: string;
     matricula: string;
+    semestre: string;
     emailPessoal?: string | null;
     telefone?: string | null;
     cep?: string | null;
@@ -76,6 +78,7 @@ export const createStudentOnApi = async (
     const payload = {
       nome: student.nome.trim(),
       matricula: student.matricula.trim(),
+      semestre: student.semestre.trim(),
       cursoId: course.id,
       email: student.email.trim(),
       telefone: student.telefone.trim(),
@@ -94,6 +97,7 @@ export const createStudentOnApi = async (
       id: String(aluno.id),
       nome: aluno.nome,
       matricula: aluno.matricula,
+      semestre: aluno.semestre,
       curso: course.nome,
       emailPessoal: aluno.emailPessoal ?? "",
       emailInstitucional: response.data.usuario.email,
@@ -137,6 +141,7 @@ export const getStudentsFromApi = async (): Promise<Student[]> => {
       id: String(aluno.id),
       nome: aluno.nome,
       matricula: aluno.matricula,
+      semestre: aluno.semestre,
       curso: aluno.curso,
       emailPessoal: aluno.emailPessoal ?? "",
       emailInstitucional: aluno.usuario.email,

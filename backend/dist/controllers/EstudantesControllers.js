@@ -49,7 +49,7 @@ const getStudents = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
                 usuario: { select: { email: true, primeiroAcesso: true } },
             },
         });
-        const alunosFormatados = alunos.map((aluno) => (Object.assign(Object.assign({}, aluno), { email: aluno.usuario.email, emailInstitucional: aluno.usuario.email, primeiroAcesso: aluno.usuario.primeiroAcesso, curso: aluno.curso.nome })));
+        const alunosFormatados = alunos.map((aluno) => (Object.assign(Object.assign({}, aluno), { email: aluno.usuario.email, emailInstitucional: aluno.usuario.email, primeiroAcesso: aluno.usuario.primeiroAcesso, curso: aluno.curso.nome, semestre: aluno.semestre })));
         return res.json({
             total: alunosFormatados.length,
             alunos: alunosFormatados,

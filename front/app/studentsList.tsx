@@ -206,6 +206,7 @@ export default function StudentsList() {
 
                     <View style={styles.metaGrid}>
                       <MetaRow icon="menu-book"   label="Curso"    value={student.curso} />
+                      <MetaRow icon="event" label="Semestre" value={student.semestre} />
                       <MetaRow icon="person-outline" label="E-mail pessoal" value={student.emailPessoal} />
                       <MetaRow icon="alternate-email" label="E-mail institucional" value={student.emailInstitucional} />
                       <MetaRow

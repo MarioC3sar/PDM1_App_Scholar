@@ -18,6 +18,7 @@ router.post("/cursos", (0, auth_1.autorizar)(["ADMIN"]), CursosControllers_1.cre
 router.post("/alunos", (0, auth_1.autorizar)(["ADMIN"]), EstudantesControllers_1.createStudent);
 router.post("/professores", (0, auth_1.autorizar)(["ADMIN"]), ProfessoresControllers_1.createTeacher);
 router.post("/disciplinas", (0, auth_1.autorizar)(["ADMIN"]), DisciplinasControllers_1.createDisciplina);
+router.put("/disciplinas/:id", (0, auth_1.autorizar)(["ADMIN"]), DisciplinasControllers_1.updateDisciplina);
 router.get("/cursos", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR", "ALUNO"]), CursosControllers_1.getCursos);
 router.get("/disciplinas", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR", "ALUNO"]), DisciplinasControllers_1.getDisciplinas);
 router.get("/alunos", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR"]), EstudantesControllers_1.getStudents);

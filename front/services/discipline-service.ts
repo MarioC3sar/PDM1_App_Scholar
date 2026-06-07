@@ -114,8 +114,8 @@ export const createDisciplineOnApi = async (
       id: String(response.data.disciplina.id),
       nome: response.data.disciplina.nome,
       cargaHoraria: String(response.data.disciplina.cargaHoraria),
-      professorResponsavel: response.data.disciplina.professor?.nome ?? teacher.nome,
-      curso: response.data.disciplina.curso?.nome ?? course.nome,
+      professorResponsavel: response.data.disciplina.professor?.nome ?? "",
+      curso: response.data.disciplina.curso?.nome ?? "",
       semestre: response.data.disciplina.semestre,
     };
   } catch (error) {
@@ -132,5 +132,67 @@ export const createDisciplineOnApi = async (
     throw error instanceof Error
       ? error
       : new Error("Falha ao cadastrar disciplina.");
+  }
+};
+
+export const updateDisciplineOnApi = async (
+  disciplineId: string,
+  discipline: Partial<CourseFormData>,
+): Promise<Course> => {
+  try {
+    const payload: Record<string, string | number> = {};
+
+    if (discipline.nome !== undefined && discipline.nome.trim() !== "") {
+      payload.nome = discipline.nome.trim();
+    }
+
+    if (discipline.cargaHoraria !== undefined && discipline.cargaHoraria.trim() !== "") {
+      payload.cargaHoraria = Number(discipline.cargaHoraria);
+    }
+
+    if (discipline.semestre !== undefined && discipline.semestre.trim() !== "") {
+      payload.semestre = discipline.semestre.trim();
+    }
+
+    if (
+      discipline.professorResponsavel !== undefined &&
+      discipline.professorResponsavel.trim() !== ""
+    ) {
+      const teacher = await resolveTeacher(discipline.professorResponsavel);
+      payload.professorId = Number(teacher.id);
+    }
+
+    if (discipline.curso !== undefined && discipline.curso.trim() !== "") {
+      const course = await resolveCourse(discipline.curso);
+      payload.cursoId = Number(course.id);
+    }
+
+    const response = await api.put<CreateDisciplineResponse>(
+      `/disciplinas/${disciplineId}`,
+      payload,
+    );
+
+    return {
+      id: String(response.data.disciplina.id),
+      nome: response.data.disciplina.nome,
+      cargaHoraria: String(response.data.disciplina.cargaHoraria),
+      professorResponsavel: response.data.disciplina.professor?.nome ?? "",
+      curso: response.data.disciplina.curso?.nome ?? "",
+      semestre: response.data.disciplina.semestre,
+    };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const backendMessage =
+        (error.response?.data as { message?: string; detalhes?: { message?: string } } | undefined)
+          ?.message ??
+        (error.response?.data as { detalhes?: { message?: string } } | undefined)
+          ?.detalhes?.message;
+
+      throw new Error(backendMessage ?? "Falha ao atualizar disciplina.");
+    }
+
+    throw error instanceof Error
+      ? error
+      : new Error("Falha ao atualizar disciplina.");
   }
 };

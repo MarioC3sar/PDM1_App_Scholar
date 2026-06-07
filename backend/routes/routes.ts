@@ -3,7 +3,7 @@ import { autenticar, autorizar } from "../middleware/auth";
 import { completeFirstAccess, createAdmin, login, logout } from "../controllers/AuthControllers";
 import { createStudent, getStudents } from "../controllers/EstudantesControllers";
 import { createTeacher, getTeachers } from "../controllers/ProfessoresControllers";
-import { createDisciplina, getDisciplinas } from "../controllers/DisciplinasControllers";
+import { createDisciplina, getDisciplinas, updateDisciplina } from "../controllers/DisciplinasControllers";
 import {
   getGrades,
   getMyGrades,
@@ -27,6 +27,7 @@ router.post("/cursos", autorizar(["ADMIN"]), createCurso);
 router.post("/alunos", autorizar(["ADMIN"]), createStudent);
 router.post("/professores", autorizar(["ADMIN"]), createTeacher);
 router.post("/disciplinas", autorizar(["ADMIN"]), createDisciplina);
+router.put("/disciplinas/:id", autorizar(["ADMIN"]), updateDisciplina);
 
 router.get("/cursos", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getCursos);
 router.get("/disciplinas", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getDisciplinas);

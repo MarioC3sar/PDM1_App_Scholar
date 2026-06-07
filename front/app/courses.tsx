@@ -2,11 +2,11 @@ import { Button, Card, ErrorMessage, ScreenContainer, TextInput } from "@/compon
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
 import { useForm } from "@/hooks/use-form";
-import { CourseFormData } from "@/types";
-import { useRouter } from "expo-router";
+import { Course, CourseFormData } from "@/types";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { updateDisciplineOnApi } from "@/services/discipline-service";
 
 const initialValues: CourseFormData = {
   nome: "",
@@ -24,32 +24,87 @@ const validate = (values: CourseFormData) => {
   return errors;
 };
 
-function MetaRow({
-                   icon,
-                   label,
-                   value,
-                 }: {
-  icon: keyof typeof MaterialIcons.glyphMap;
+type EditableField = keyof Pick<
+  CourseFormData,
+  "nome" | "cargaHoraria" | "professorResponsavel" | "curso" | "semestre"
+>;
+
+const FIELD_CONFIG: Record<
+  EditableField,
+  { label: string; icon: keyof typeof MaterialIcons.glyphMap; keyboardType?: "default" | "numeric" }
+> = {
+  nome: { label: "Nome da disciplina", icon: "menu-book" },
+  cargaHoraria: { label: "Carga Horária", icon: "schedule", keyboardType: "numeric" },
+  professorResponsavel: { label: "Professor Responsável", icon: "person" },
+  curso: { label: "Curso", icon: "school" },
+  semestre: { label: "Semestre", icon: "event", keyboardType: "numeric" },
+};
+
+function FieldRow({
+  label,
+  icon,
+  value,
+  isEditing,
+  editingValue,
+  keyboardType,
+  saving,
+  onStartEdit,
+  onChange,
+  onSave,
+  onCancel,
+}: {
   label: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
   value: string;
+  isEditing: boolean;
+  editingValue: string;
+  keyboardType?: "default" | "numeric";
+  saving: boolean;
+  onStartEdit: () => void;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
 }) {
-  return (
-      <View style={styles.metaRow}>
-        <View style={styles.metaIcon}>
-          <MaterialIcons name={icon} size={15} color={palette.primary} />
-        </View>
-        <View style={styles.metaText}>
-          <Text style={styles.metaLabel}>{label}</Text>
-          <Text style={styles.metaValue} numberOfLines={2}>{value}</Text>
+  if (isEditing) {
+    return (
+      <View style={styles.editBox}>
+        <TextInput
+          label={label}
+          value={editingValue}
+          onChangeText={onChange}
+          keyboardType={keyboardType}
+        />
+        <View style={styles.editActions}>
+          <Button title="Salvar" size="small" loading={saving} onPress={onSave} />
+          <Button title="Cancelar" size="small" variant="secondary" onPress={onCancel} />
         </View>
       </View>
+    );
+  }
+
+  return (
+    <Pressable style={styles.metaRow} onPress={onStartEdit}>
+      <View style={styles.metaIcon}>
+        <MaterialIcons name={icon} size={15} color={palette.primary} />
+      </View>
+      <View style={styles.metaText}>
+        <Text style={styles.metaLabel}>{label}</Text>
+        <Text style={styles.metaValue} numberOfLines={2}>
+          {value}
+        </Text>
+      </View>
+      <MaterialIcons name="edit" size={16} color={palette.textMuted} />
+    </Pressable>
   );
 }
 
 export default function CoursesScreen() {
-  const router = useRouter();
   const { teachers, courses, addCourse, loadDisciplines, loadingDisciplines } = useAcademicData();
   const [loadError, setLoadError] = useState("");
+  const [editError, setEditError] = useState("");
+  const [editingTarget, setEditingTarget] = useState<{ courseId: string; field: EditableField } | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [savingTargetKey, setSavingTargetKey] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +129,47 @@ export default function CoursesScreen() {
       },
       validate,
   );
+
+  const startEdit = (course: Course, field: EditableField) => {
+    setEditError("");
+    setEditingTarget({ courseId: course.id, field });
+    setEditingValue(course[field]);
+  };
+
+  const cancelEdit = () => {
+    setEditingTarget(null);
+    setEditingValue("");
+    setEditError("");
+  };
+
+  const saveEdit = async () => {
+    if (!editingTarget) {
+      return;
+    }
+
+    const value = editingValue.trim();
+
+    if (!value) {
+      setEditError("O valor do campo não pode ficar vazio.");
+      return;
+    }
+
+    const targetKey = `${editingTarget.courseId}:${editingTarget.field}`;
+    setSavingTargetKey(targetKey);
+    setEditError("");
+
+    try {
+      await updateDisciplineOnApi(editingTarget.courseId, {
+        [editingTarget.field]: value,
+      });
+      await loadDisciplines();
+      cancelEdit();
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : "Falha ao atualizar disciplina.");
+    } finally {
+      setSavingTargetKey(null);
+    }
+  };
 
   return (
       <ScreenContainer>
@@ -155,6 +251,12 @@ export default function CoursesScreen() {
           />
         </View>
 
+        {editError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{editError}</Text>
+          </View>
+        ) : null}
+
         {/* ── List section ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Disciplinas Cadastradas</Text>
@@ -189,9 +291,68 @@ export default function CoursesScreen() {
                     </View>
 
                     <View style={styles.metaGrid}>
-                      <MetaRow icon="schedule"   label="Carga Horária"        value={`${course.cargaHoraria}h`} />
-                      <MetaRow icon="person"     label="Professor Responsável" value={course.professorResponsavel} />
-                      <MetaRow icon="school"     label="Curso"                 value={course.curso} />
+                      <FieldRow
+                        label={FIELD_CONFIG.nome.label}
+                        icon={FIELD_CONFIG.nome.icon}
+                        value={course.nome}
+                        isEditing={editingTarget?.courseId === course.id && editingTarget.field === "nome"}
+                        editingValue={editingValue}
+                        saving={savingTargetKey === `${course.id}:nome`}
+                        onStartEdit={() => startEdit(course, "nome")}
+                        onChange={setEditingValue}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                      />
+                      <FieldRow
+                        label={FIELD_CONFIG.cargaHoraria.label}
+                        icon={FIELD_CONFIG.cargaHoraria.icon}
+                        value={`${course.cargaHoraria}h`}
+                        isEditing={editingTarget?.courseId === course.id && editingTarget.field === "cargaHoraria"}
+                        editingValue={editingValue}
+                        keyboardType="numeric"
+                        saving={savingTargetKey === `${course.id}:cargaHoraria`}
+                        onStartEdit={() => startEdit(course, "cargaHoraria")}
+                        onChange={setEditingValue}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                      />
+                      <FieldRow
+                        label={FIELD_CONFIG.professorResponsavel.label}
+                        icon={FIELD_CONFIG.professorResponsavel.icon}
+                        value={course.professorResponsavel}
+                        isEditing={editingTarget?.courseId === course.id && editingTarget.field === "professorResponsavel"}
+                        editingValue={editingValue}
+                        saving={savingTargetKey === `${course.id}:professorResponsavel`}
+                        onStartEdit={() => startEdit(course, "professorResponsavel")}
+                        onChange={setEditingValue}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                      />
+                      <FieldRow
+                        label={FIELD_CONFIG.curso.label}
+                        icon={FIELD_CONFIG.curso.icon}
+                        value={course.curso}
+                        isEditing={editingTarget?.courseId === course.id && editingTarget.field === "curso"}
+                        editingValue={editingValue}
+                        saving={savingTargetKey === `${course.id}:curso`}
+                        onStartEdit={() => startEdit(course, "curso")}
+                        onChange={setEditingValue}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                      />
+                      <FieldRow
+                        label={FIELD_CONFIG.semestre.label}
+                        icon={FIELD_CONFIG.semestre.icon}
+                        value={course.semestre}
+                        isEditing={editingTarget?.courseId === course.id && editingTarget.field === "semestre"}
+                        editingValue={editingValue}
+                        keyboardType="numeric"
+                        saving={savingTargetKey === `${course.id}:semestre`}
+                        onStartEdit={() => startEdit(course, "semestre")}
+                        onChange={setEditingValue}
+                        onSave={saveEdit}
+                        onCancel={cancelEdit}
+                      />
                     </View>
                   </View>
               ))
@@ -385,6 +546,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: palette.border,
+  },
+  editBox: {
+    gap: 10,
+    backgroundColor: palette.background,
+    borderRadius: 14,
+    padding: 10,
+  },
+  editActions: {
+    flexDirection: "row",
+    gap: 10,
   },
   metaText: { flex: 1, justifyContent: "center" },
   metaLabel: {

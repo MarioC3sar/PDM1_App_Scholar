@@ -1,0 +1,2 @@
+ALTER TABLE "alunos"
+ADD COLUMN "semestre" TEXT NOT NULL DEFAULT '';

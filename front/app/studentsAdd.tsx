@@ -30,6 +30,7 @@ import {
 const initialValues: StudentFormData = {
   nome: "",
   matricula: "",
+  semestre: "",
   curso: "",
   email: "",
   telefone: "",
@@ -46,6 +47,7 @@ const validate = (values: StudentFormData) => {
   const requiredFields: (keyof StudentFormData)[] = [
     "nome",
     "matricula",
+    "semestre",
     "curso",
     "email",
     "telefone",
@@ -311,6 +313,18 @@ export default function StudentsScreen() {
                 </View>
 
                 <TextInput
+                    label="Semestre"
+                    keyboardType="numeric"
+                    placeholder="Ex: 1"
+                    value={values.semestre}
+                    onChangeText={(text) => handleChange("semestre", text)}
+                    error={errors.semestre}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    required
+                />
+
+                <TextInput
                     ref={telefoneRef}
                     label="Telefone"
                     keyboardType="phone-pad"
@@ -549,7 +563,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   courseRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     gap: 10,
     paddingVertical: 4,
   },

@@ -127,7 +127,125 @@ async function main() {
     });
 
     console.log('Disciplinas criadas com sucesso!');
+
+    await backfillExistingStudents();
+
     console.log('Seed finalizado!');
+}
+
+const pickMostFrequentSemester = (values: string[]) => {
+    const counts = new Map<string, number>();
+
+    for (const value of values) {
+      const normalized = String(value).trim();
+
+      if (!normalized) {
+        continue;
+      }
+
+      counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
+    }
+
+    let selectedSemester = "";
+    let selectedCount = 0;
+
+    for (const [semester, count] of counts.entries()) {
+      if (count > selectedCount) {
+        selectedSemester = semester;
+        selectedCount = count;
+        continue;
+      }
+
+      if (count === selectedCount) {
+        const currentSemester = Number(semester);
+        const selectedSemesterNumber = Number(selectedSemester);
+
+        if (
+          Number.isFinite(currentSemester) &&
+          (!Number.isFinite(selectedSemesterNumber) || currentSemester < selectedSemesterNumber)
+        ) {
+          selectedSemester = semester;
+        }
+      }
+    }
+
+    return selectedSemester;
+};
+
+async function backfillExistingStudents() {
+    console.log("Iniciando backfill de alunos existentes...");
+
+    const students = await prisma.aluno.findMany({
+        where: {
+            semestre: "",
+        },
+        select: {
+            id: true,
+            nome: true,
+            cursoId: true,
+            semestre: true,
+            notas: {
+                select: {
+                    disciplinaId: true,
+                    disciplina: {
+                        select: {
+                            semestre: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (students.length === 0) {
+        console.log("Nenhum aluno pendente de backfill encontrado.");
+        return;
+    }
+
+    for (const student of students) {
+        const semestresNasNotas = student.notas.map((nota) => nota.disciplina.semestre);
+        const inferredSemester = pickMostFrequentSemester(semestresNasNotas) || "1";
+
+        const disciplinasDoSemestre = await prisma.disciplina.findMany({
+            where: {
+                cursoId: student.cursoId,
+                semestre: inferredSemester,
+            },
+            select: { id: true },
+        });
+
+        await prisma.aluno.update({
+            where: { id: student.id },
+            data: { semestre: inferredSemester },
+        });
+
+        if (disciplinasDoSemestre.length === 0) {
+            console.log(
+                `Aluno ${student.nome} atualizado para semestre ${inferredSemester}, mas sem disciplinas correspondentes no curso.`,
+            );
+            continue;
+        }
+
+        const existingNoteIds = new Set(student.notas.map((nota) => nota.disciplinaId));
+
+        const notesToCreate = disciplinasDoSemestre.filter((disciplina) => {
+            return !existingNoteIds.has(disciplina.id);
+        });
+
+        if (notesToCreate.length > 0) {
+            await prisma.nota.createMany({
+                data: notesToCreate.map((disciplina) => ({
+                    alunoId: student.id,
+                    disciplinaId: disciplina.id,
+                })),
+                skipDuplicates: true,
+            });
+        }
+
+        console.log(
+            `Aluno ${student.nome} backfill concluído para semestre ${inferredSemester} com ${notesToCreate.length} notas criadas.`,
+        );
+    }
 }
 
 main()

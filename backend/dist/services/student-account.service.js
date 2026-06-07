@@ -72,6 +72,7 @@ const createStudentAccount = (input) => __awaiter(void 0, void 0, void 0, functi
             data: {
                 nome: data.nome,
                 matricula: data.matricula,
+                semestre: data.semestre,
                 emailPessoal: data.email,
                 cursoId: data.cursoId,
                 usuarioId: usuario.id,
@@ -87,6 +88,7 @@ const createStudentAccount = (input) => __awaiter(void 0, void 0, void 0, functi
                 id: true,
                 nome: true,
                 matricula: true,
+                semestre: true,
                 emailPessoal: true,
                 telefone: true,
                 cep: true,
@@ -98,6 +100,22 @@ const createStudentAccount = (input) => __awaiter(void 0, void 0, void 0, functi
                 cursoId: true,
             },
         });
+        const disciplinasDoSemestre = yield tx.disciplina.findMany({
+            where: {
+                cursoId: data.cursoId,
+                semestre: data.semestre,
+            },
+            select: { id: true },
+        });
+        if (disciplinasDoSemestre.length > 0) {
+            yield tx.nota.createMany({
+                data: disciplinasDoSemestre.map((disciplina) => ({
+                    alunoId: aluno.id,
+                    disciplinaId: disciplina.id,
+                })),
+                skipDuplicates: true,
+            });
+        }
         return {
             usuario,
             aluno,
