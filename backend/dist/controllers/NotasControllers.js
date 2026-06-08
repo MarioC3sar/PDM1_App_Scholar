@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateGrade = exports.getProfessorDisciplineStudents = exports.getProfessorDisciplines = exports.getMyGrades = exports.getGrades = void 0;
+exports.updateGrade = exports.getProfessorDisciplineStudents = exports.getProfessorDisciplines = exports.getDashboardStatsController = exports.getMyGrades = exports.getGrades = void 0;
 const prismaClient_1 = __importDefault(require("../prismaClient"));
 const grades_service_1 = require("../services/grades.service");
 const getGrades = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -119,6 +119,25 @@ const getMyGrades = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getMyGrades = getMyGrades;
+const getDashboardStatsController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Não autenticado." });
+        }
+        if (req.user.perfil !== "ADMIN") {
+            return res.status(403).json({
+                message: "Apenas administradores podem acessar este resumo.",
+            });
+        }
+        const stats = yield (0, grades_service_1.getDashboardStats)();
+        return res.json(stats);
+    }
+    catch (error) {
+        console.error("Erro ao carregar estatisticas do dashboard:", error);
+        return res.status(500).json({ message: "Erro interno do servidor." });
+    }
+});
+exports.getDashboardStatsController = getDashboardStatsController;
 const getProfessorDisciplines = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!req.user) {

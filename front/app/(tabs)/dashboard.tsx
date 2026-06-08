@@ -160,11 +160,8 @@ export default function DashboardScreen() {
           value: loadingStats ? "..." : disciplineCount ?? 0,
           icon: "menu-book" as keyof typeof MaterialIcons.glyphMap,
         },
-        {
-          label: "Aprovação",
-          value: loadingStats ? "..." : `${(approvalRate ?? 0).toFixed(0)}%`,
-          icon: "trending-up" as keyof typeof MaterialIcons.glyphMap,
-        },
+
+
 
       ]
     : [];

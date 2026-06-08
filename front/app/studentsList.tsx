@@ -15,14 +15,16 @@ import { ScreenContainer } from "@/components/ui";
 import { palette } from "@/constants/theme";
 import { useAcademicData } from "@/hooks/use-academic-data";
 
-type FilterKey = "nome" | "curso" | "matricula" | "cidade" | "bairro" | "emailPessoal";
+type FilterKey = "nome" | "curso" | "matricula" | "cidade" |  "logradouro" | "bairro" | "emailPessoal";
 
 const FILTER_OPTIONS: { key: FilterKey; label: string }[] = [
   { key: "nome",      label: "Nome" },
   { key: "curso",     label: "Curso" },
   { key: "matricula", label: "Matrícula" },
-  { key: "cidade",    label: "Cidade" },
   { key: "bairro",    label: "Bairro" },
+  { key: "logradouro", label: "Logradouro" },
+  { key: "cidade",    label: "Cidade" },
+
   { key: "emailPessoal",     label: "E-mail pessoal" },
 ];
 
@@ -80,11 +82,25 @@ export default function StudentsList() {
   }, [loadStudents]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return students;
-    const q = query.toLowerCase().trim();
-    return students.filter((s) =>
-        String(s[activeFilter] ?? "").toLowerCase().includes(q),
-    );
+    // 1. Primeiro passo: Filtrar a lista com base no que foi digitado
+    let result = students;
+
+    if (query.trim()) {
+      const q = query.toLowerCase().trim();
+      result = students.filter((s) =>
+          String(s[activeFilter] ?? "").toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Segundo passo: Ordenar o resultado em ordem alfabética pelo nome
+    // Criamos uma cópia do array usando [...result] para evitar modificar o estado original
+    return [...result].sort((a, b) => {
+      const nomeA = String(a.nome || "").toLowerCase();
+      const nomeB = String(b.nome || "").toLowerCase();
+
+      // O localeCompare é perfeito para isso, pois ele entende acentos (Á, É, Í) e os ordena corretamente!
+      return nomeA.localeCompare(nomeB);
+    });
   }, [students, query, activeFilter]);
 
   return (

@@ -72,17 +72,28 @@ export default function TeachersList() {
         return () => { mounted = false; };
     }, [loadTeachers]);
 
+    // === AQUI ESTÁ A LÓGICA ATUALIZADA COM ORDEM ALFABÉTICA ===
     const filtered = useMemo(() => {
-        if (!query.trim()) return teachers;
-        const q = query.toLowerCase().trim();
-        return teachers.filter((t) =>
-            String(t[activeFilter] ?? "").toLowerCase().includes(q),
-        );
+        let result = teachers;
+
+        if (query.trim()) {
+            const q = query.toLowerCase().trim();
+            result = teachers.filter((t) =>
+                String(t[activeFilter] ?? "").toLowerCase().includes(q)
+            );
+        }
+
+        return [...result].sort((a, b) => {
+            const nomeA = String(a.nome || "").toLowerCase();
+            const nomeB = String(b.nome || "").toLowerCase();
+            return nomeA.localeCompare(nomeB);
+        });
     }, [teachers, query, activeFilter]);
+    // ==========================================================
 
     return (
         <ScreenContainer>
-            {/* ── Hero ── */}
+            {/* --- Hero --- */}
             <View style={styles.hero}>
                 <View style={styles.glowOne} />
                 <View style={styles.glowTwo} />
@@ -105,7 +116,7 @@ export default function TeachersList() {
                 </Text>
             </View>
 
-            {/* ── Search card ── */}
+            {/* --- Search card --- */}
             <View style={styles.searchCard}>
                 <Text style={styles.searchLabel}>
                     Buscar por {FILTER_OPTIONS.find((f) => f.key === activeFilter)?.label}
@@ -152,7 +163,7 @@ export default function TeachersList() {
                 </ScrollView>
             </View>
 
-            {/* ── Count ── */}
+            {/* --- Count --- */}
             <Text style={styles.resultCount}>
                 {loadingTeachers
                     ? "Carregando professores do banco..."
@@ -165,7 +176,7 @@ export default function TeachersList() {
                 </View>
             ) : null}
 
-            {/* ── List ── */}
+            {/* --- List --- */}
             <View style={styles.list}>
                 {loadingTeachers ? (
                     <View style={styles.loadingCard}>

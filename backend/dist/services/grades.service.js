@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateStudentGrade = exports.getProfessorDisciplineGrades = exports.listProfessorDisciplines = exports.AppError = void 0;
+exports.updateStudentGrade = exports.getProfessorDisciplineGrades = exports.listProfessorDisciplines = exports.getDashboardStats = exports.AppError = void 0;
 const client_1 = require("@prisma/client");
 const prismaClient_1 = __importDefault(require("../prismaClient"));
 class AppError extends Error {
@@ -55,6 +55,29 @@ const getProfessorByUserId = (userId) => __awaiter(void 0, void 0, void 0, funct
         select: { id: true, nome: true },
     });
 });
+const getDashboardStats = () => __awaiter(void 0, void 0, void 0, function* () {
+    const [approvedCount, concludedCount, totalGrades] = yield Promise.all([
+        prismaClient_1.default.nota.count({
+            where: { situacao: client_1.SituacaoNota.APROVADO },
+        }),
+        prismaClient_1.default.nota.count({
+            where: {
+                situacao: {
+                    in: [client_1.SituacaoNota.APROVADO, client_1.SituacaoNota.REPROVADO],
+                },
+            },
+        }),
+        prismaClient_1.default.nota.count(),
+    ]);
+    const approvalRate = concludedCount > 0 ? (approvedCount / concludedCount) * 100 : 0;
+    return {
+        approvedCount,
+        concludedCount,
+        totalGrades,
+        approvalRate,
+    };
+});
+exports.getDashboardStats = getDashboardStats;
 const listProfessorDisciplines = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const professor = yield getProfessorByUserId(userId);
     if (!professor) {

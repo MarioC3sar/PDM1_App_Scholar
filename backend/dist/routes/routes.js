@@ -23,8 +23,9 @@ router.get("/cursos", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR", "ALUNO"]), Cu
 router.get("/disciplinas", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR", "ALUNO"]), DisciplinasControllers_1.getDisciplinas);
 router.get("/alunos", (0, auth_1.autorizar)(["ADMIN", "PROFESSOR"]), EstudantesControllers_1.getStudents);
 router.get("/professores", (0, auth_1.autorizar)(["ADMIN"]), ProfessoresControllers_1.getTeachers);
-router.get("/notas/:matricula", (0, auth_1.autorizar)(["ALUNO", "ADMIN", "PROFESSOR"]), NotasControllers_1.getGrades);
+router.get("/dashboard/stats", (0, auth_1.autorizar)(["ADMIN"]), NotasControllers_1.getDashboardStatsController);
 router.get("/notas/me", (0, auth_1.autorizar)(["ALUNO"]), NotasControllers_1.getMyGrades);
+router.get("/notas/:matricula", (0, auth_1.autorizar)(["ALUNO", "ADMIN", "PROFESSOR"]), NotasControllers_1.getGrades);
 router.get("/professores/me/disciplinas", (0, auth_1.autorizar)(["PROFESSOR"]), NotasControllers_1.getProfessorDisciplines);
 router.get("/professores/me/disciplinas/:disciplinaId/notas", (0, auth_1.autorizar)(["PROFESSOR", "ADMIN"]), NotasControllers_1.getProfessorDisciplineStudents);
 router.put("/notas/:id", (0, auth_1.autorizar)(["PROFESSOR", "ADMIN"]), NotasControllers_1.updateGrade);

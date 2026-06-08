@@ -61,6 +61,32 @@ const getProfessorByUserId = async (userId: number) => {
   });
 };
 
+export const getDashboardStats = async () => {
+  const [approvedCount, concludedCount, totalGrades] = await Promise.all([
+    prisma.nota.count({
+      where: { situacao: SituacaoNota.APROVADO },
+    }),
+    prisma.nota.count({
+      where: {
+        situacao: {
+          in: [SituacaoNota.APROVADO, SituacaoNota.REPROVADO],
+        },
+      },
+    }),
+    prisma.nota.count(),
+  ]);
+
+  const approvalRate =
+    concludedCount > 0 ? (approvedCount / concludedCount) * 100 : 0;
+
+  return {
+    approvedCount,
+    concludedCount,
+    totalGrades,
+    approvalRate,
+  };
+};
+
 export const listProfessorDisciplines = async (userId: number) => {
   const professor = await getProfessorByUserId(userId);
 

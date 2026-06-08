@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../prismaClient";
 import {
   AppError,
+  getDashboardStats,
   getProfessorDisciplineGrades,
   listProfessorDisciplines,
   updateStudentGrade,
@@ -117,6 +118,26 @@ export const getMyGrades = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Erro ao buscar boletim proprio:", error);
+    return res.status(500).json({ message: "Erro interno do servidor." });
+  }
+};
+
+export const getDashboardStatsController = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Não autenticado." });
+    }
+
+    if (req.user.perfil !== "ADMIN") {
+      return res.status(403).json({
+        message: "Apenas administradores podem acessar este resumo.",
+      });
+    }
+
+    const stats = await getDashboardStats();
+    return res.json(stats);
+  } catch (error) {
+    console.error("Erro ao carregar estatisticas do dashboard:", error);
     return res.status(500).json({ message: "Erro interno do servidor." });
   }
 };

@@ -1,7 +1,8 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { StyleSheet, Text, View, TextInput as RNTextInput, Pressable, Platform, SafeAreaView } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import { Button, Card, ErrorMessage, ScreenContainer, TextInput } from "@/components/ui";
 import { palette } from "@/constants/theme";
@@ -27,14 +28,13 @@ const validate = (values: FirstAccessFormData) => {
   if (!values.novaSenha.trim()) {
     errors.novaSenha = "Informe a nova senha.";
   } else if (!passwordStrength.test(values.novaSenha)) {
-    errors.novaSenha =
-      "Use no minimo 8 caracteres com maiuscula, minuscula, numero e simbolo.";
+    errors.novaSenha = "Use no mínimo 8 caracteres com maiúscula, minúscula, número e símbolo.";
   }
 
   if (!values.confirmarSenha.trim()) {
     errors.confirmarSenha = "Confirme a nova senha.";
   } else if (values.confirmarSenha !== values.novaSenha) {
-    errors.confirmarSenha = "As senhas nao coincidem.";
+    errors.confirmarSenha = "As senhas não coincidem.";
   }
 
   return errors;
@@ -44,82 +44,124 @@ export default function FirstAccessScreen() {
   const router = useRouter();
   const { completeFirstAccess } = useAuth();
 
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const confirmarSenhaRef = useRef<RNTextInput>(null);
+
   const { values, errors, loading, handleChange, handleSubmit } = useForm(
-    initialValues,
-    async (formValues) => {
-      await changeFirstAccessPassword(formValues.novaSenha);
-      completeFirstAccess();
-      router.replace("/(tabs)/dashboard");
-    },
-    validate,
+      initialValues,
+      async (formValues) => {
+        await changeFirstAccessPassword(formValues.novaSenha);
+        completeFirstAccess();
+        router.replace("/(tabs)/dashboard");
+      },
+      validate,
   );
 
+  const toggleVisibility = () => setIsPasswordVisible(!isPasswordVisible);
+
   return (
-    <ScreenContainer contentContainerStyle={styles.content}>
-      <View style={styles.hero}>
-        <View style={styles.heroIcon}>
-          <MaterialIcons name="lock-reset" size={28} color="#fff" />
-        </View>
-        <Text style={styles.eyebrow}>SEGURANCA</Text>
-        <Text style={styles.title}>Troca de senha obrigatoria</Text>
-        <Text style={styles.subtitle}>
-          Esta e a primeira entrada na conta. Defina uma nova senha antes de continuar.
-        </Text>
-      </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.background }}>
+        <KeyboardAwareScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.content}
+            enableOnAndroid={true}
+            extraHeight={120}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+        >
+          <ScreenContainer>
+            <View style={styles.hero}>
+              <View style={styles.heroIcon}>
+                <MaterialIcons name="lock-reset" size={28} color="#fff" />
+              </View>
+              <Text style={styles.eyebrow}>SEGURANÇA</Text>
+              <Text style={styles.title}>Troca de senha obrigatória</Text>
+              <Text style={styles.subtitle}>
+                Esta é a primeira entrada na conta. Defina uma nova senha antes de continuar.
+              </Text>
+            </View>
 
-      <Card variant="elevated" style={styles.card}>
-        <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
+            <Card variant="elevated" style={styles.card}>
+              <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
-        <View style={styles.rulesBanner}>
-          <Text style={styles.rulesTitle}>Requisitos da senha</Text>
-          <View style={styles.rulesList}>
-            <RuleItem text="8 caracteres ou mais" />
-            <RuleItem text="Uma letra maiuscula" />
-            <RuleItem text="Uma letra minuscula" />
-            <RuleItem text="Um numero" />
-            <RuleItem text="Um simbolo especial" />
-          </View>
-        </View>
+              <View style={styles.rulesBanner}>
+                <Text style={styles.rulesTitle}>Requisitos da senha</Text>
+                <View style={styles.rulesList}>
+                  <RuleItem text="8 caracteres ou mais" />
+                  <RuleItem text="Uma letra maiúscula" />
+                  <RuleItem text="Uma letra minúscula" />
+                  <RuleItem text="Um número" />
+                  <RuleItem text="Um símbolo especial" />
+                </View>
+              </View>
 
-        <TextInput
-          label="Nova senha"
-          secureTextEntry
-          value={values.novaSenha}
-          onChangeText={(text) => handleChange("novaSenha", text)}
-          error={errors.novaSenha}
-          required
-        />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                    label="Nova senha"
+                    secureTextEntry={!isPasswordVisible}
+                    value={values.novaSenha}
+                    onChangeText={(text) => handleChange("novaSenha", text)}
+                    error={errors.novaSenha}
+                    required
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => confirmarSenhaRef.current?.focus()}
+                />
+                <Pressable onPress={toggleVisibility} style={styles.eyeIconContainer}>
+                  <MaterialIcons
+                      name={isPasswordVisible ? "visibility-off" : "visibility"}
+                      size={20}
+                      color={palette.textMuted}
+                  />
+                </Pressable>
+              </View>
 
-        <TextInput
-          label="Confirmar nova senha"
-          secureTextEntry
-          value={values.confirmarSenha}
-          onChangeText={(text) => handleChange("confirmarSenha", text)}
-          error={errors.confirmarSenha}
-          required
-        />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                    ref={confirmarSenhaRef}
+                    label="Confirmar nova senha"
+                    secureTextEntry={!isPasswordVisible}
+                    value={values.confirmarSenha}
+                    onChangeText={(text) => handleChange("confirmarSenha", text)}
+                    error={errors.confirmarSenha}
+                    required
+                    returnKeyType="done"
+                    onSubmitEditing={handleSubmit}
+                />
+                <Pressable onPress={toggleVisibility} style={styles.eyeIconContainer}>
+                  <MaterialIcons
+                      name={isPasswordVisible ? "visibility-off" : "visibility"}
+                      size={20}
+                      color={palette.textMuted}
+                  />
+                </Pressable>
+              </View>
 
-        <Button
-          title={loading ? "Alterando..." : "Confirmar nova senha"}
-          loading={loading}
-          onPress={handleSubmit}
-        />
-      </Card>
-    </ScreenContainer>
+              <Button
+                  title={loading ? "Alterando..." : "Confirmar nova senha"}
+                  loading={loading}
+                  onPress={handleSubmit}
+              />
+            </Card>
+            <View style={{ height: 40 }} />
+          </ScreenContainer>
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
   );
 }
 
 function RuleItem({ text }: { text: string }) {
   return (
-    <View style={styles.ruleItem}>
-      <View style={styles.ruleDot} />
-      <Text style={styles.ruleText}>{text}</Text>
-    </View>
+      <View style={styles.ruleItem}>
+        <View style={styles.ruleDot} />
+        <Text style={styles.ruleText}>{text}</Text>
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
+    flexGrow: 1,
     justifyContent: "center",
     paddingVertical: 18,
   },
@@ -206,5 +248,16 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
     fontSize: 13,
     lineHeight: 18,
+  },
+  passwordContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  eyeIconContainer: {
+    position: 'absolute',
+    right: 12,
+    top: 35,
+    zIndex: 10,
+    padding: 5,
   },
 });

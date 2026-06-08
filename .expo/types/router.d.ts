@@ -1,6 +1,8 @@
 /* eslint-disable */
+// @ts-ignore
 import * as Router from 'expo-router';
 
+// @ts-ignore
 export * from 'expo-router';
 
 declare module 'expo-router' {

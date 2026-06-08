@@ -12,7 +12,8 @@ import {
   View,
   TextInput as RNTextInput,
   Platform,
-  SafeAreaView
+  SafeAreaView,
+  Modal, // <-- Importação do Modal adicionada
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -28,7 +29,7 @@ const initialValues: TeacherFormData = {
 const validate = (values: TeacherFormData) => {
   const errors: Record<string, string> = {};
   Object.entries(values).forEach(([field, value]) => {
-    if (!value.trim()) errors[field] = "Campo obrigatorio.";
+    if (!value.trim()) errors[field] = "Campo obrigatório.";
   });
   return errors;
 };
@@ -38,7 +39,7 @@ export default function TeachersScreen() {
   const { addTeacher } = useAcademicData();
   const [feedback, setFeedback] = useState("");
 
-  // ── Refs para os TextInputs ──
+  // Refs para os TextInputs
   const titulacaoRef = useRef<RNTextInput>(null);
   const areaRef = useRef<RNTextInput>(null);
   const tempoDocenciaRef = useRef<RNTextInput>(null);
@@ -73,48 +74,37 @@ export default function TeachersScreen() {
             showsVerticalScrollIndicator={false}
         >
 
-          {/* ── Hero ── */}
+          {/* --- Hero --- */}
           <View style={styles.hero}>
             <View style={styles.glowOne} />
             <View style={styles.glowTwo} />
 
-          <View style={styles.heroTop}>
-            <View style={styles.heroBrand}>
-              <MaterialIcons name="person" size={16} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.heroBrandText}>Gestão de Professores</Text>
+            <View style={styles.heroTop}>
+              <View style={styles.heroBrand}>
+                <MaterialIcons name="person" size={16} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.heroBrandText}>Gestão de Professores</Text>
+              </View>
+              <TouchableOpacity
+                  style={styles.backBtn}
+                  onPress={() => router.back()}
+                  activeOpacity={0.8}
+              >
+                <Text style={styles.backBtnText}>Voltar</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-                style={styles.backBtn}
-                onPress={() => router.back()}
-                activeOpacity={0.8}
-            >
-              <Text style={styles.backBtnText}>Voltar</Text>
-            </TouchableOpacity>
-          </View>
 
             <Text style={styles.heroSubtitle}>
               Preencha os campos de titulação, área de atuação e tempo de docência.
             </Text>
           </View>
 
-          {/* ── Form ── */}
+          {/* --- Form --- */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Novo Professor</Text>
           </View>
 
           <View style={styles.formCard}>
-            <View style={[styles.successCard, !!feedback ? styles.successCardVisible : null]}>
-              <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
-              {feedback ? (
-                  <>
-                    <View style={styles.successHeader}>
-                      <MaterialIcons name="check-circle" size={18} color="#166534" />
-                      <Text style={styles.successTitle}>Professor cadastrado</Text>
-                    </View>
-                    <Text style={styles.successText}>{feedback}</Text>
-                  </>
-              ) : null}
-            </View>
+            <ErrorMessage message={errors.submit ?? ""} visible={!!errors.submit} />
 
             <TextInput
                 label="Nome"
@@ -160,7 +150,6 @@ export default function TeachersScreen() {
                 required
             />
 
-            {/* INPUT DE E-MAIL (O QUE ESTAVA DANDO PROBLEMA) */}
             <TextInput
                 ref={emailRef}
                 label="Email pessoal"
@@ -181,17 +170,43 @@ export default function TeachersScreen() {
             />
           </View>
 
-          {/* ── Link to list ── */}
+          {/* --- Link to list --- */}
           <TouchableOpacity
               style={styles.listLink}
               onPress={() => router.push("/teachersList")}
               activeOpacity={0.75}
           >
-            <Text style={styles.listLinkText}>Ver professores cadastrados →</Text>
+            <Text style={styles.listLinkText}>Ver professores cadastrados ➔</Text>
           </TouchableOpacity>
           <View style={{ height: 150 }} />
 
         </KeyboardAwareScrollView>
+
+        {/* --- Modal de Sucesso --- */}
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={!!feedback}
+            onRequestClose={() => setFeedback("")}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalIconBox}>
+                <MaterialIcons name="check-circle" size={48} color={palette.primary} />
+              </View>
+              <Text style={styles.modalTitle}>Cadastro Concluído!</Text>
+              <Text style={styles.modalText}>{feedback}</Text>
+
+              <View style={{ width: '100%', marginTop: 10 }}>
+                <Button
+                    title="Entendi"
+                    onPress={() => setFeedback("")}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
   );
 }
@@ -292,36 +307,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  successCard: {
-    display: "none",
-  },
-  successCardVisible: {
-    display: "flex",
-    marginBottom: 14,
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: "#ECFDF3",
-    borderWidth: 1,
-    borderColor: "#A7F3D0",
-  },
-  successHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  successTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#166534",
-  },
-  successText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#14532D",
-    fontWeight: "500",
-  },
-
   // List link
   listLink: {
     padding: 14,
@@ -335,5 +320,49 @@ const styles = StyleSheet.create({
     color: palette.primary,
     fontWeight: "700",
     fontSize: 13,
+  },
+
+  // Modal de Sucesso
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalContent: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: palette.primary + "15",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: palette.text,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalText: {
+    fontSize: 15,
+    color: palette.textMuted,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 20,
   },
 });

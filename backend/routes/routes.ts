@@ -5,6 +5,7 @@ import { createStudent, getStudents } from "../controllers/EstudantesControllers
 import { createTeacher, getTeachers } from "../controllers/ProfessoresControllers";
 import { createDisciplina, getDisciplinas, updateDisciplina } from "../controllers/DisciplinasControllers";
 import {
+  getDashboardStatsController,
   getGrades,
   getMyGrades,
   getProfessorDisciplines,
@@ -33,6 +34,7 @@ router.get("/cursos", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getCursos);
 router.get("/disciplinas", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getDisciplinas);
 router.get("/alunos", autorizar(["ADMIN", "PROFESSOR"]), getStudents);
 router.get("/professores", autorizar(["ADMIN"]), getTeachers);
+router.get("/dashboard/stats", autorizar(["ADMIN"]), getDashboardStatsController);
 
 router.get("/notas/me", autorizar(["ALUNO"]), getMyGrades);
 router.get("/notas/:matricula", autorizar(["ALUNO", "ADMIN", "PROFESSOR"]), getGrades);
