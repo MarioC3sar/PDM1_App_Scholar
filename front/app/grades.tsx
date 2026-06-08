@@ -59,9 +59,9 @@ export default function GradesScreen() {
         setStudentMatricula(response.data.matricula);
       } catch (requestError) {
         setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Falha ao carregar boletim.",
+            requestError instanceof Error
+                ? requestError.message
+                : "Falha ao carregar boletim.",
         );
       } finally {
         setLoading(false);
@@ -90,9 +90,9 @@ export default function GradesScreen() {
       setSearchedMatricula(targetMatricula);
     } catch (requestError) {
       setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Falha ao carregar boletim.",
+          requestError instanceof Error
+              ? requestError.message
+              : "Falha ao carregar boletim.",
       );
       setGrades([]);
       setStudentName("");
@@ -105,172 +105,174 @@ export default function GradesScreen() {
 
   const displayedGrades = useMemo(() => grades, [grades]);
 
-  const average = useMemo(() => {
-    if (displayedGrades.length === 0) {
+  // Cálculo corrigido: Considera apenas disciplinas que possuem média válida (!= null)
+  const calculatedAverage = useMemo(() => {
+    const gradesWithMedia = displayedGrades.filter((grade) => grade.media !== null);
+
+    if (gradesWithMedia.length === 0) {
       return 0;
     }
 
-    const total = displayedGrades.reduce((sum, grade) => sum + (grade.media ?? 0), 0);
-    return total / displayedGrades.length;
+    const total = gradesWithMedia.reduce((sum, grade) => sum + (grade.media ?? 0), 0);
+    return total / gradesWithMedia.length;
   }, [displayedGrades]);
 
   return (
-    <ScreenContainer>
-      <View style={styles.hero}>
-        <View style={styles.heroHeader}>
-
-          <View style={styles.heroBadge}>
-            <MaterialIcons name="assessment" size={16} color={palette.background} />
-            <Text style={styles.heroBadgeText}>Boletim</Text>
-          </View>
-        </View>
-        <Text style={styles.title}>Visualização de boletim</Text>
-        <Text style={styles.subtitle}>
-          Consulte disciplina, nota 1, nota 2, média, faltas e situação.
-        </Text>
-      </View>
-
-      {isStudentView ? (
-        <Card variant="elevated">
-          {loading ? (
-            <View style={styles.loadingRow}>
-              <ActivityIndicator color={palette.primary} />
-              <Text style={styles.itemText}>Carregando seu boletim...</Text>
-            </View>
-          ) : error ? (
-            <Text style={[styles.itemText, styles.dangerText]}>{error}</Text>
-          ) : (
-            <>
-              <View style={styles.summaryTop}>
-                <View style={styles.summaryAvatar}>
-                  <Text style={styles.summaryAvatarText}>
-                    {String(studentName || user?.nome || "?")[0].toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.summaryInfo}>
-                  <Text style={styles.summaryLabel}>Aluno logado</Text>
-                  <Text style={styles.summaryName}>{studentName}</Text>
-                  <Text style={styles.summaryMeta}>Matrícula: {studentMatricula}</Text>
-                </View>
-              </View>
-
-              <View style={styles.metricsRow}>
-                <View style={styles.metricCard}>
-                  <Text style={styles.metricValue}>{displayedGrades.length}</Text>
-                  <Text style={styles.metricLabel}>Disciplinas</Text>
-                </View>
-                <View style={styles.metricCard}>
-                  <Text style={styles.metricValue}>{average.toFixed(1)}</Text>
-                  <Text style={styles.metricLabel}>Média geral</Text>
-                </View>
-              </View>
-            </>
-          )}
-        </Card>
-      ) : (
-        <Card variant="elevated">
-          <TextInput
-            label="Matrícula"
-            value={matriculaInput}
-            onChangeText={setMatriculaInput}
-            placeholder="Ex: 2024001"
-          />
-          <Button title="Consultar boletim" onPress={loadGradesByMatricula} />
-          {studentName ? (
-            <View style={styles.resultBanner}>
-              <MaterialIcons name="person" size={18} color={palette.primary} />
-              <Text style={styles.resultText}>
-                Resultado: {studentName} ({searchedMatricula})
-              </Text>
-            </View>
-          ) : null}
-        </Card>
-      )}
-
-      {error && !isStudentView ? (
-        <Card variant="outlined">
-          <Text style={[styles.itemText, styles.dangerText]}>{error}</Text>
-        </Card>
-      ) : null}
-
-      {loading && !isStudentView ? (
-        <Card variant="elevated">
-          <View style={styles.loadingRow}>
-            <ActivityIndicator color={palette.primary} />
-            <Text style={styles.itemText}>Carregando boletim...</Text>
-          </View>
-        </Card>
-      ) : null}
-
-      {displayedGrades.map((grade) => (
-        <Card key={grade.id} variant="outlined" style={styles.gradeCard}>
-          <View style={styles.gradeHeader}>
-            <View style={styles.gradeTitleWrap}>
-              <Text style={styles.itemTitle}>{grade.disciplina}</Text>
-              {!isStudentView && grade.aluno ? (
-                <Text style={styles.itemText}>Aluno: {grade.aluno}</Text>
-              ) : null}
-            </View>
-            <View
-              style={[
-                styles.statusDot,
-                grade.situacao === "APROVADO"
-                  ? styles.statusDotApproved
-                  : grade.situacao === "REPROVADO"
-                    ? styles.statusDotRejected
-                    : styles.statusDotOngoing,
-              ]}
-            />
-          </View>
-
-          <View style={styles.gradeGrid}>
-            <View style={styles.gradeMetric}>
-              <Text style={styles.metricLabel}>Nota 1</Text>
-              <Text style={styles.gradeValue}>{formatValue(grade.nota1)}</Text>
-            </View>
-            <View style={styles.gradeMetric}>
-              <Text style={styles.metricLabel}>Nota 2</Text>
-              <Text style={styles.gradeValue}>{formatValue(grade.nota2)}</Text>
-            </View>
-            <View style={styles.gradeMetric}>
-              <Text style={styles.metricLabel}>Média</Text>
-              <Text style={styles.gradeValue}>{formatValue(grade.media)}</Text>
-            </View>
-            <View style={styles.gradeMetric}>
-              <Text style={styles.metricLabel}>Faltas</Text>
-              <Text style={styles.gradeValue}>{grade.faltas}</Text>
+      <ScreenContainer>
+        <View style={styles.hero}>
+          <View style={styles.heroHeader}>
+            <View style={styles.heroBadge}>
+              <MaterialIcons name="assessment" size={16} color={palette.background} />
+              <Text style={styles.heroBadgeText}>Boletim</Text>
             </View>
           </View>
-
-          <Text
-            style={[
-              styles.status,
-              grade.situacao === "APROVADO"
-                ? styles.success
-                : grade.situacao === "REPROVADO"
-                  ? styles.danger
-                  : styles.pending,
-            ]}
-          >
-            {grade.situacao}
+          <Text style={styles.title}>Visualização de boletim</Text>
+          <Text style={styles.subtitle}>
+            Consulte disciplina, nota 1, nota 2, média, faltas e situação.
           </Text>
-        </Card>
-      ))}
-
-      <Card style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Resumo</Text>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatValue}>{displayedGrades.length}</Text>
-            <Text style={styles.summaryStatLabel}>Registros</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryStatValue}>{average.toFixed(2)}</Text>
-            <Text style={styles.summaryStatLabel}>Média geral</Text>
-          </View>
         </View>
-      </Card>
-    </ScreenContainer>
+
+        {isStudentView ? (
+            <Card variant="elevated">
+              {loading ? (
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator color={palette.primary} />
+                    <Text style={styles.itemText}>Carregando seu boletim...</Text>
+                  </View>
+              ) : error ? (
+                  <Text style={[styles.itemText, styles.dangerText]}>{error}</Text>
+              ) : (
+                  <>
+                    <View style={styles.summaryTop}>
+                      <View style={styles.summaryAvatar}>
+                        <Text style={styles.summaryAvatarText}>
+                          {String(studentName || user?.nome || "?")[0].toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.summaryInfo}>
+                        <Text style={styles.summaryLabel}>Aluno logado</Text>
+                        <Text style={styles.summaryName}>{studentName}</Text>
+                        <Text style={styles.summaryMeta}>Matrícula: {studentMatricula}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.metricsRow}>
+                      <View style={styles.metricCard}>
+                        <Text style={styles.metricValue}>{displayedGrades.length}</Text>
+                        <Text style={styles.metricLabel}>Disciplinas</Text>
+                      </View>
+                      <View style={styles.metricCard}>
+                        <Text style={styles.metricValue}>{calculatedAverage.toFixed(1)}</Text>
+                        <Text style={styles.metricLabel}>Média geral</Text>
+                      </View>
+                    </View>
+                  </>
+              )}
+            </Card>
+        ) : (
+            <Card variant="elevated">
+              <TextInput
+                  label="Matrícula"
+                  value={matriculaInput}
+                  onChangeText={setMatriculaInput}
+                  placeholder="Ex: 2024001"
+              />
+              <Button title="Consultar boletim" onPress={loadGradesByMatricula} />
+              {studentName ? (
+                  <View style={styles.resultBanner}>
+                    <MaterialIcons name="person" size={18} color={palette.primary} />
+                    <Text style={styles.resultText}>
+                      Resultado: {studentName} ({searchedMatricula})
+                    </Text>
+                  </View>
+              ) : null}
+            </Card>
+        )}
+
+        {error && !isStudentView ? (
+            <Card variant="outlined">
+              <Text style={[styles.itemText, styles.dangerText]}>{error}</Text>
+            </Card>
+        ) : null}
+
+        {loading && !isStudentView ? (
+            <Card variant="elevated">
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color={palette.primary} />
+                <Text style={styles.itemText}>Carregando boletim...</Text>
+              </View>
+            </Card>
+        ) : null}
+
+        {displayedGrades.map((grade) => (
+            <Card key={grade.id} variant="outlined" style={styles.gradeCard}>
+              <View style={styles.gradeHeader}>
+                <View style={styles.gradeTitleWrap}>
+                  <Text style={styles.itemTitle}>{grade.disciplina}</Text>
+                  {!isStudentView && grade.aluno ? (
+                      <Text style={styles.itemText}>Aluno: {grade.aluno}</Text>
+                  ) : null}
+                </View>
+                <View
+                    style={[
+                      styles.statusDot,
+                      grade.situacao === "APROVADO"
+                          ? styles.statusDotApproved
+                          : grade.situacao === "REPROVADO"
+                              ? styles.statusDotRejected
+                              : styles.statusDotOngoing,
+                    ]}
+                />
+              </View>
+
+              <View style={styles.gradeGrid}>
+                <View style={styles.gradeMetric}>
+                  <Text style={styles.metricLabel}>Nota 1</Text>
+                  <Text style={styles.gradeValue}>{formatValue(grade.nota1)}</Text>
+                </View>
+                <View style={styles.gradeMetric}>
+                  <Text style={styles.metricLabel}>Nota 2</Text>
+                  <Text style={styles.gradeValue}>{formatValue(grade.nota2)}</Text>
+                </View>
+                <View style={styles.gradeMetric}>
+                  <Text style={styles.metricLabel}>Média</Text>
+                  <Text style={styles.gradeValue}>{formatValue(grade.media)}</Text>
+                </View>
+                <View style={styles.gradeMetric}>
+                  <Text style={styles.metricLabel}>Faltas</Text>
+                  <Text style={styles.gradeValue}>{grade.faltas}</Text>
+                </View>
+              </View>
+
+              <Text
+                  style={[
+                    styles.status,
+                    grade.situacao === "APROVADO"
+                        ? styles.success
+                        : grade.situacao === "REPROVADO"
+                            ? styles.danger
+                            : styles.pending,
+                  ]}
+              >
+                {grade.situacao}
+              </Text>
+            </Card>
+        ))}
+
+        <Card style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Resumo</Text>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryStatValue}>{displayedGrades.length}</Text>
+              <Text style={styles.summaryStatLabel}>Registros</Text>
+            </View>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryStatValue}>{calculatedAverage.toFixed(2)}</Text>
+              <Text style={styles.summaryStatLabel}>Média geral</Text>
+            </View>
+          </View>
+        </Card>
+      </ScreenContainer>
   );
 }
 
@@ -288,7 +290,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     padding: 18,
     marginTop: 25,
-
     marginBottom: 16,
     shadowColor: palette.primary,
     shadowOffset: { width: 0, height: 8 },
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "800" as const,
+    fontWeight: "800",
     color: "#fff",
     marginBottom: 6,
   },
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     color: palette.primary,
-    fontWeight: "800" as const,
+    fontWeight: "800",
     fontSize: 16,
     marginBottom: 2,
   },
@@ -464,12 +465,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   status: {
-    alignSelf: "flex-start" as const,
+    alignSelf: "flex-start",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
     color: "#ffffff",
-    fontWeight: "700" as const,
+    fontWeight: "700",
   },
   success: {
     backgroundColor: palette.success,
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     color: palette.text,
-    fontWeight: "800" as const,
+    fontWeight: "800",
     marginBottom: 8,
   },
   summaryRow: {
@@ -511,7 +512,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   loadingRow: {
-    flexDirection: "row" as const,
+    flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
