@@ -13,6 +13,7 @@ import {
   updateGrade,
 } from "../controllers/NotasControllers";
 import { createCurso, getCursos } from "../controllers/CursosControllers";
+import { createAviso, getAvisos } from "../controllers/AvisosControllers";
 
 const router = Router();
 
@@ -29,12 +30,14 @@ router.post("/alunos", autorizar(["ADMIN"]), createStudent);
 router.post("/professores", autorizar(["ADMIN"]), createTeacher);
 router.post("/disciplinas", autorizar(["ADMIN"]), createDisciplina);
 router.put("/disciplinas/:id", autorizar(["ADMIN"]), updateDisciplina);
+router.post("/avisos", autorizar(["ADMIN", "PROFESSOR"]), createAviso);
 
 router.get("/cursos", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getCursos);
 router.get("/disciplinas", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getDisciplinas);
 router.get("/alunos", autorizar(["ADMIN", "PROFESSOR"]), getStudents);
 router.get("/professores", autorizar(["ADMIN"]), getTeachers);
 router.get("/dashboard/stats", autorizar(["ADMIN"]), getDashboardStatsController);
+router.get("/avisos", autorizar(["ADMIN", "PROFESSOR", "ALUNO"]), getAvisos);
 
 router.get("/notas/me", autorizar(["ALUNO"]), getMyGrades);
 router.get("/notas/:matricula", autorizar(["ALUNO", "ADMIN", "PROFESSOR"]), getGrades);

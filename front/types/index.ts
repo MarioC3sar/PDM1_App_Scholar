@@ -7,7 +7,7 @@ export interface User {
   id: string;
   nome: string;
   email: string;
-  perfil: "aluno" | "professor" | "admin";
+  perfil: "aluno" | "professor" | "admin" | "ALUNO" | "PROFESSOR" | "ADMIN";
   firstAccess: boolean;
   matricula?: string;
 }
@@ -147,4 +147,12 @@ export interface AcademicContextType {
 
 export interface ValidationErrors {
   [key: string]: string;
+}
+
+export interface Aviso {
+  id: number;
+  titulo: string;
+  mensagem: string;
+  perfil_alvo: "todos" | "ALUNO" | "PROFESSOR";
+  data_criacao: string;
 }

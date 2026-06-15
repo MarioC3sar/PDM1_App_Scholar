@@ -4,6 +4,8 @@ import { getDashboardStats } from "@/services/dashboard-service";
 import { getDisciplinesFromApi } from "@/services/discipline-service";
 import { getStudentsFromApi } from "@/services/student-service";
 import { getTeachersFromApi } from "@/services/teacher-service";
+import api from "@/services/api";
+import { Aviso } from "@/types";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -15,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Role = "aluno" | "professor" | "admin";
 
@@ -25,6 +28,13 @@ const modules: {
   icon: keyof typeof MaterialIcons.glyphMap;
   roles: Role[];
 }[] = [
+  {
+    title: "Mural de Avisos",
+    description: "Comunicados e lembretes",
+    route: "/avisos",
+    icon: "campaign",
+    roles: ["aluno", "professor", "admin"],
+  },
   {
     title: "Cadastro de Alunos",
     description: "Gerenciar alunos matriculados",
@@ -85,6 +95,26 @@ export default function DashboardScreen() {
   const [approvalRate, setApprovalRate] = useState<number | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState("");
+  const [newAvisosCount, setNewAvisosCount] = useState(0);
+
+  useEffect(() => {
+    const checkNewAvisos = async () => {
+      try {
+        const lastLoginStr = await AsyncStorage.getItem("lastLogin");
+        const lastLogin = lastLoginStr ? new Date(lastLoginStr) : new Date(0);
+        const { data: avisos } = await api.get<Aviso[]>("/avisos");
+        const newAvisos = avisos.filter(
+          (aviso) => new Date(aviso.data_criacao) > lastLogin
+        );
+        setNewAvisosCount(newAvisos.length);
+      } catch (error) {
+        console.error("Failed to check for new avisos", error);
+      }
+    };
+
+    checkNewAvisos();
+    AsyncStorage.setItem("lastLogin", new Date().toISOString());
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -137,10 +167,10 @@ export default function DashboardScreen() {
   }, [isAdmin]);
 
   const visibleModules = modules.filter((m) =>
-      user ? m.roles.includes(user.perfil) : false,
+      user ? m.roles.includes(user.perfil.toLowerCase() as Role) : false,
   );
   const visibleQuick = quickAccess.filter((q) =>
-      user ? q.roles.includes(user.perfil) : false,
+      user ? q.roles.includes(user.perfil.toLowerCase() as Role) : false,
   );
 
   const stats = isAdmin
@@ -183,15 +213,27 @@ export default function DashboardScreen() {
               <Text style={styles.welcomeLabel}>Bem-vindo,</Text>
               <Text style={styles.heroUserName}>{user?.nome}</Text>
             </View>
-            <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.82}>
-              <Text style={styles.logoutText}>Sair</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+              <TouchableOpacity style={styles.notifBtn} onPress={() => router.push('/avisos')} activeOpacity={0.82}>
+                <MaterialIcons name="notifications" size={20} color="#fff" />
+                {newAvisosCount > 0 && <View style={styles.notifDot} />}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.82}>
+                <Text style={styles.logoutText}>Sair</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-
-
-
-
         </View>
+
+        {newAvisosCount > 0 && (
+          <Pressable style={styles.newAvisosBanner} onPress={() => router.push('/avisos')}>
+            <MaterialIcons name="info" size={24} color={palette.primary} />
+            <Text style={styles.newAvisosText}>
+              Você tem {newAvisosCount} novo{newAvisosCount > 1 ? 's' : ''} aviso{newAvisosCount > 1 ? 's' : ''}!
+            </Text>
+            <MaterialIcons name="chevron-right" size={24} color={palette.primary} />
+          </Pressable>
+        )}
 
         {statsError ? (
           <View style={styles.errorCard}>
@@ -304,53 +346,6 @@ const styles = StyleSheet.create({
     bottom: -40,
     left: -20,
   },
-  heroTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  brandBlock: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  brandDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 40,
-  },
-  brandText: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 13,
-    fontWeight: "700",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 40
-  },
-  notifBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  notifDot: {
-    position: "absolute",
-    top: 7,
-    right: 7,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#f87171",
-    borderWidth: 1.5,
-    borderColor: palette.primary,
-  },
   welcomeRow: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -379,7 +374,41 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
   },
-
+  notifBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifDot: {
+    position: "absolute",
+    top: 7,
+    right: 7,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#f87171",
+    borderWidth: 1.5,
+    borderColor: palette.primary,
+  },
+  newAvisosBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.primary + '20',
+    padding: 16,
+    borderRadius: 16,
+    marginHorizontal: 18,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  newAvisosText: {
+    flex: 1,
+    marginLeft: 12,
+    color: palette.primary,
+    fontWeight: '700',
+  },
   errorCard: {
     marginHorizontal: 18,
     marginBottom: 12,
@@ -440,7 +469,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: palette.background,
+    color: palette.text,
     marginBottom: 12,
     paddingHorizontal: 18,
   },

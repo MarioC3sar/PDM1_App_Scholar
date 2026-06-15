@@ -138,3 +138,13 @@ model Nota {
   @@unique([alunoId, disciplinaId])
   @@map("notas")
 }
+
+model Aviso {
+  id           Int      @id @default(autoincrement())
+  titulo       String
+  mensagem     String
+  perfil_alvo  String   @default("todos")
+  data_criacao DateTime @default(now())
+
+  @@map("avisos")
+}
