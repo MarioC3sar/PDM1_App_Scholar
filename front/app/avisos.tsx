@@ -58,7 +58,7 @@ export default function AvisosList() {
     fetchAvisos();
   }, []);
 
-  const canCreate = user?.perfil === "PROFESSOR" || user?.perfil === "ADMIN";
+  const canCreate = user?.perfil.toLowerCase() === "professor" || user?.perfil.toLowerCase() === "admin";
 
   return (
     <ScreenContainer>
